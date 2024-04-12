@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %} {{ post_title }} -- jondowns.net {% endblock %}
+{% block header %}
+
+<div class="flex-column">
+  <div>
+    <div><h1>{{ post_title }}</h1></div>
+    <div><h2>Jon Downs</h2></div>
+    <div><h2>{{ post_date }}</h2></div>
+  </div>
+  <div class="flex shrink">
+    <img 
+      src="{{ post_thumbnail }}"
+      alt="{{ post_thumbnail_alt }}"
+      class="flex shrink max-w-3"
+      />
+  </div>
+</div>
+
+{% endblock %}
+{% block body %} {{ post_body }} {% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome -- jondowns.net{% endblock %}
+{% block header %}
+<h1>Welcome!</h1>
+<div class="flex justify-between items-center space-x-5">
+  <div>
+    <img style="min-width: 100%; max-width: 200px;" src="../assets/images/headshot2020_small.png"
+      alt="Profile Picture" />
+  </div>
+  <div>
+    <p>
+      I am an epidemiologist with 10 years' experience in the public sector.
+      Early in my my career, I discovered a passion for computer programming as a tool to advance
+        public health.
+      My specialties include task automation, regression modeling, machine learning, and performance optimization.
+      I also co-facilitate a monthly meeting for other epidemiologists at my agency where
+        we discuss topics in coding.
+      I use this website to host some of my thoughts on coding as well as my current projects.
+      It was coded in Rust (Axum).
+    </p>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block body %}
+
+<div class="flex-column justify-between">
+  <h1>Recent Posts</h1>
+  {% for post in posts.iter().rev() %}
+  <div class="py-1">
+    <div style="background-color: #f5f2f0;" class="rounded-lg py-0.5 px-2 flex items-center">
+      <div class="pr-5">
+        <img src="{{ post.post_thumbnail }}" alt="{{ post.post_thumbnail_alt }}" style="max-width: 75px;"></img>
+      </div>
+      <div class="align-right inline-block">
+        <div>
+          <a class="text-sky-800" href="./posts/{{ post.post_id }}">
+            <h2>{{ post.post_title }}</h2>
+          </a>
+        </div>
+        <div>
+          <p class="italic">by Jon Downs on {{ post.post_date }}<p>
+        </div>
+        <div>
+          <p>{{ post.post_summary }}</p>
+        </div>
+      </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

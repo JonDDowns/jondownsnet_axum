@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' class='svglite' width='720.00pt' height='576.00pt' viewBox='0 0 720.00 576.00'>
+<defs>
+  <style type='text/css'><![CDATA[
+    .svglite line, .svglite polyline, .svglite polygon, .svglite path, .svglite rect, .svglite circle {
+      fill: none;
+      stroke: #000000;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10.00;
+    }
+    .svglite text {
+      white-space: pre;
+    }
+  ]]></style>
+</defs>
+<rect width='100%' height='100%' style='stroke: none; fill: none;'/>
+<defs>
+  <clipPath id='cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA='>
+    <rect x='0.00' y='0.00' width='720.00' height='576.00' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
+</g>
+<defs>
+  <clipPath id='cpNzAuMTV8NzE0LjUyfDMxLjU4fDUzNi42MQ=='>
+    <rect x='70.15' y='31.58' width='644.37' height='505.03' />
+  </clipPath>
+</defs>
+<g clip-path='url(#cpNzAuMTV8NzE0LjUyfDMxLjU4fDUzNi42MQ==)'>
+<polyline points='70.15,449.89 714.52,449.89 ' style='stroke-width: 0.53; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='70.15,322.36 714.52,322.36 ' style='stroke-width: 0.53; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='70.15,194.82 714.52,194.82 ' style='stroke-width: 0.53; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='70.15,67.29 714.52,67.29 ' style='stroke-width: 0.53; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='70.15,513.66 714.52,513.66 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='70.15,386.12 714.52,386.12 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='70.15,258.59 714.52,258.59 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='70.15,131.06 714.52,131.06 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='162.21,536.61 162.21,31.58 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='315.63,536.61 315.63,31.58 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='469.05,536.61 469.05,31.58 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<polyline points='622.47,536.61 622.47,31.58 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
+<rect x='93.17' y='507.44' width='138.08' height='6.22' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #1F2937;' />
+<rect x='246.59' y='263.16' width='138.08' height='250.50' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #1F2937;' />
+<rect x='400.01' y='110.08' width='138.08' height='403.58' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #1F2937;' />
+<rect x='553.43' y='105.59' width='138.08' height='408.07' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #1F2937;' />
+</g>
+<g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
+<text x='65.22' y='518.03' text-anchor='end' style='font-size: 12.00px; font-family: "Liberation Sans";' textLength='7.64px' lengthAdjust='spacingAndGlyphs'>0</text>
+<text x='65.22' y='390.50' text-anchor='end' style='font-size: 12.00px; font-family: "Liberation Sans";' textLength='42.01px' lengthAdjust='spacingAndGlyphs'>25,000</text>
+<text x='65.22' y='262.96' text-anchor='end' style='font-size: 12.00px; font-family: "Liberation Sans";' textLength='42.01px' lengthAdjust='spacingAndGlyphs'>50,000</text>
+<text x='65.22' y='135.43' text-anchor='end' style='font-size: 12.00px; font-family: "Liberation Sans";' textLength='42.01px' lengthAdjust='spacingAndGlyphs'>75,000</text>
+<text x='162.21' y='550.29' text-anchor='middle' style='font-size: 12.00px; font-family: "Liberation Sans";' textLength='62.44px' lengthAdjust='spacingAndGlyphs'>R baseline</text>
+<text x='315.63' y='550.29' text-anchor='middle' style='font-size: 12.00px; font-family: "Liberation Sans";' textLength='54.30px' lengthAdjust='spacingAndGlyphs'>Rust (v1)</text>
+<text x='469.05' y='550.29' text-anchor='middle' style='font-size: 12.00px; font-family: "Liberation Sans";' textLength='54.30px' lengthAdjust='spacingAndGlyphs'>Rust (v2)</text>
+<text x='622.47' y='550.29' text-anchor='middle' style='font-size: 12.00px; font-family: "Liberation Sans";' textLength='65.41px' lengthAdjust='spacingAndGlyphs'>Rust (final)</text>
+<text x='392.34' y='567.19' text-anchor='middle' style='font-size: 16.00px; font-family: "Liberation Sans";' textLength='58.82px' lengthAdjust='spacingAndGlyphs'>Version</text>
+<text transform='translate(17.14,284.10) rotate(-90)' text-anchor='middle' style='font-size: 16.00px; font-family: "Liberation Sans";' textLength='320.07px' lengthAdjust='spacingAndGlyphs'>Comparisons per Second (in thousands)</text>
+<text x='70.15' y='21.52' style='font-size: 22.00px; font-family: "Liberation Sans";' textLength='569.38px' lengthAdjust='spacingAndGlyphs'>Cosine Trigram Comparisons per Second by Method</text>
+</g>
+</svg>

@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  h1 {@apply text-3xl font-bold }
+  h2 {@apply text-xl font-semibold}
+  h2 {@apply text-xl font-semibold}
+  h3 {@apply text-lg italic}
+  a {@apply text-sky-800 font-bold}
+  ul, ol {@apply px-10}
+  ul {@apply list-disc}
+  ol {@apply list-decimal}
+}
