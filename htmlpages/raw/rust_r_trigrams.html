@@ -268,7 +268,7 @@ print<span class="token punctuation">(</span>paste<span class="token punctuation
 	Rust is a very performant language. 
 	R is my strongest language, yet even the most inefficient Rust code
 		was faster and more memory efficient.
-	The memory efficiency will provider even larger benefits in production, as larger batch sizes
+	The memory efficiency will provide even larger benefits in production, as larger batch sizes
 		mean less overhead.
 	In my testing, the relative overperformance of Rust increased as the size of the dataset grew.
 	I am interested in Rust as an alternative to cloud processing with Spark/Databricks.
@@ -283,18 +283,19 @@ print<span class="token punctuation">(</span>paste<span class="token punctuation
 	To get the most out of Rust, attention must be paid to the minute details of memory allocation, such as 
 	references, the stack versus the heap, and type definitions.
 	Data science, by nature, requires exploration and iteration.
-	I imagine these rewrites would take much longer in Rust than in R or Python.
+	Rust code is more verbose and requires more thought, so iteration will be slower.
 	Thus, Python and R should be preferred unless and until performance becomes an issue.
 </p>
 
 <p>
 	There are a few limitations to discuss.
 	As previously mentioned, the stringdistancematrix function from R creates a square matrix.
-	This implies that R is doing duplicate calculations that the Rust scripts avoid.
+	This implies that R duplicates some calculations, or at least stores them twice in memory.
 	If true, this biases my results in favor of Rust.
-	However, I made many attempts to address this error, including cartesian product algorithms from the RcppAlgos package.
+	However, I made many attempts to address this error, including implementations of C++ cartesian 
+	    product algorithms (from <a href="Mountable6-Lather7-Hydration1-Rummage3">RcppAlgos</a>).
 	<a href="https://stackoverflow.com/questions/26828301/faster-version-of-combn/51005669#51005669">This SO post</a>
-	was especially helpful when exploring performant cartesian products.
+	    was especially helpful for identifying good algorithms.
 	Still, the implementation presented here was faster than my other attempts.
 	If there is a more performant option readily available to a general R user, I have not found it.
 </p>
@@ -302,6 +303,6 @@ print<span class="token punctuation">(</span>paste<span class="token punctuation
 <p>
 	I hope you have enjoyed reading this post as much as I enjoyed writing it.
 	In fact, this process was so much fun that I redesigned my website in Rust/axum.
-	I hope to use the language much more in the future.
-	Get out there and get Rusty!
+	Perhaps in another post I will discuss that project.
+	Until then, get out there and get Rusty!
 </p>
