@@ -50,24 +50,27 @@ async fn main() {
         .init();
 
     let ports = Ports {
-        http: 7878,
-        https: 3000,
+        http: cfg.port_http,
+        https: cfg.port_https,
     };
     tokio::spawn(redirect_http_to_https(ports));
 
     let tlscfg = RustlsConfig::from_pem_file(
         PathBuf::from(&cfg.pem_dir).join("cert.pem"),
-        PathBuf::from(&cfg.pem_dir).join("key.pem"),
+        PathBuf::from(&cfg.pem_dir).join("privkey.pem"),
     )
     .await
     .unwrap();
+
+    println!("{}", cfg.pem_dir);
+    println!("{:?}", tlscfg);
 
     let db_connection_str = std::env::var("DATABASE_URL").unwrap_or_else(|_| cfg.cnxn_str);
 
     // set up connection pool
     let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(Duration::from_secs(3))
+        .max_connections(cfg.max_connections)
+        .acquire_timeout(Duration::from_secs(5))
         .connect(&db_connection_str)
         .await
         .expect("can't connect to database");
@@ -93,14 +96,13 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/posts/:post_id", get(post))
-        .nest_service("/posts/images", ServeDir::new("blog_images"))
         .nest_service("/assets", ServeDir::new("assets"))
+        .nest_service("/.well-known/", ServeDir::new(".well-known"))
         .with_state(shared_state);
     let app = app.fallback(handler_404);
 
     // run it with hyper
-    //let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
-    let listener = SocketAddr::from(([127, 0, 0, 1], ports.https));
+    let listener = SocketAddr::from(([0, 0, 0, 0], ports.https));
     tracing::debug!("listening on {}", listener);
     axum_server::bind_rustls(listener, tlscfg)
         .serve(app.into_make_service())
@@ -114,10 +116,13 @@ struct Config {
     password: String,
     cnxn_str: String,
     pem_dir: String,
+    port_http: u16,
+    port_https: u16,
+    max_connections: u32,
 }
 
 fn read_cfg() -> Config {
-    let f = std::fs::File::open("../config.yaml").expect("lul");
+    let f = std::fs::File::open("../config_dev.yaml").expect("lul");
     let d: Config = serde_yaml::from_reader(f).expect("Something happened");
     d
 }
@@ -239,7 +244,7 @@ async fn redirect_http_to_https(ports: Ports) {
         }
     };
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], ports.http));
+    let addr = SocketAddr::from(([0, 0, 0, 0], ports.http));
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     tracing::debug!("listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, redirect.into_make_service())

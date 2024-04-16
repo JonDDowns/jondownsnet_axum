@@ -1,0 +1,171 @@
+<p>
+  In this post, I created an <a href="https://jon-downs.shinyapps.io/bestofsim/">interactive R Shiny application</a> for
+  a basic probability problem in a data science interview prep book I was reading. The following problem was presented
+  in their probability chapter:
+</p>
+
+<blockquote>
+  <p>
+    Two teams play a series of games (best of 7 &mdash; whoever wins 4 games first) in which each team has a 50% chance
+    of winning any given round (no draws allowed). What is the probability that the series goes to 7 games?
+  </p>
+</blockquote>
+
+<p>
+  I want to extend this past the 7-game use case and solve the general case of the probability that a series of an
+  arbitrary number of games goes to the maximum number of games possible. We will compare simulation-based and a
+  theory-based approaches. Since any series with an even number of games opens up the possibility of an additional
+  tie-breaker game, I will focus on series with an odd number of games.
+</p>
+
+<h2>Simulation</h2>
+
+<div id="simulating-a-single-series" class="section level3">
+  <h3>Simulating a single series</h3>
+
+  <p>
+    First, we write a function to simulate a single round. Let`s allow the player to toggle the chance of winning, with
+    a default of 50%. To win a series, a team will need to win at least half of the games. And we will output the number
+    of games in the series, the total games actually played, the number of wins, and the number of losses.
+  </p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Simulate a series with a specified number of games</span>
+simSeries <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>nGames<span class="token punctuation">,</span> pwin <span class="token operator">=</span> <span class="token number">0.5</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+<span class="token keyword">if</span><span class="token punctuation">(</span>nGames <span class="token percent-operator operator">%%</span> <span class="token number">2</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+  stop<span class="token punctuation">(</span><span class="token string">"Please enter an odd integer"</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># Start with no wins/losses</span>
+win <span class="token operator">&lt;-</span> <span class="token number">0</span>
+loss <span class="token operator">&lt;-</span> <span class="token number">0</span>
+
+<span class="token comment"># Determine the number of games needed to win the series</span>
+nToWin <span class="token operator">&lt;-</span> floor<span class="token punctuation">(</span>nGames<span class="token operator">/</span><span class="token number">2</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Simulate each game until one side reaches target win count</span>
+<span class="token keyword">while</span><span class="token punctuation">(</span>win <span class="token operator">&lt;</span> nToWin <span class="token operator">&amp;</span> loss <span class="token operator">&lt;</span> nToWin<span class="token punctuation">)</span><span class="token punctuation">{</span>
+  <span class="token keyword">if</span><span class="token punctuation">(</span>sample<span class="token punctuation">(</span>x <span class="token operator">=</span> c<span class="token punctuation">(</span><span class="token boolean">TRUE</span><span class="token punctuation">,</span> <span class="token boolean">FALSE</span><span class="token punctuation">)</span><span class="token punctuation">,</span> size <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">,</span> prob <span class="token operator">=</span> c<span class="token punctuation">(</span>pwin<span class="token punctuation">,</span> <span class="token number">1</span><span class="token operator">-</span>pwin<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+    win <span class="token operator">&lt;-</span> win <span class="token operator">+</span> <span class="token number">1</span>
+  <span class="token punctuation">}</span> <span class="token keyword">else</span><span class="token punctuation">{</span>
+    loss <span class="token operator">&lt;-</span> loss <span class="token operator">+</span> <span class="token number">1</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># Return the game stats</span>
+out <span class="token operator">&lt;-</span> data.frame<span class="token punctuation">(</span>bestOf <span class="token operator">=</span> nGames<span class="token punctuation">,</span> gamesPlayed <span class="token operator">=</span> win <span class="token operator">+</span> loss<span class="token punctuation">,</span> wins <span class="token operator">=</span> win<span class="token punctuation">,</span> losses <span class="token operator">=</span> loss<span class="token punctuation">)</span>
+return<span class="token punctuation">(</span>out<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># Test out our single series simulation function</span>
+simSeries<span class="token punctuation">(</span>nGames <span class="token operator">=</span> <span class="token number">7</span><span class="token punctuation">,</span> pwin <span class="token operator">=</span> <span class="token number">0.5</span><span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment">## bestOf gamesPlayed wins losses</span>
+<span class="token comment">## 1 7 7 3 4</span></code></pre>
+
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Make sure series with even-numbered games throw an error</span>
+try<span class="token punctuation">(</span>simSeries<span class="token punctuation">(</span>nGames <span class="token operator">=</span> <span class="token number">6</span><span class="token punctuation">,</span> pwin <span class="token operator">=</span> <span class="token number">0.5</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment">## Error in simSeries(nGames = 6, pwin = 0.5) : Please enter an odd integer</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+  <h3>Simulating multiple series</h3>
+  <p>
+    Looks like the function is working well, and not allowing even-numbered series. Great! But, a single simulation is
+    not nearly as informative as many simulations. Let`s write a new function to simulate multiple series of a given
+    number of games at once, then we can look at some distribution plots of the total number of games played in each
+    simulation. We will default to 1,000 simulations with a 50% probability of winning each game.
+  </p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Simulate multiple series for a single number of games</span>
+simMulti <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>nGames<span class="token punctuation">,</span> nSims <span class="token operator">=</span> <span class="token number">1000</span><span class="token punctuation">,</span> pwin <span class="token operator">=</span> <span class="token number">0.5</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+  do.call<span class="token punctuation">(</span>rbind<span class="token punctuation">,</span> lapply<span class="token punctuation">(</span>rep<span class="token punctuation">(</span>nGames<span class="token punctuation">,</span> nSims<span class="token punctuation">)</span><span class="token punctuation">,</span> simSeries<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># Simulate 1000 series, get frequency plot of the number of games plays</span>
+library<span class="token punctuation">(</span>ggplot2<span class="token punctuation">)</span>
+ggplot<span class="token punctuation">(</span>data <span class="token operator">=</span> simMulti<span class="token punctuation">(</span><span class="token number">7</span><span class="token punctuation">)</span><span class="token punctuation">,</span> aes<span class="token punctuation">(</span>x <span class="token operator">=</span> gamesPlayed<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+  geom_histogram<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+  theme_bw<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+  xlab<span class="token punctuation">(</span><span class="token string">"Number of games played in series"</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+  ylab<span class="token punctuation">(</span><span class="token string">"Number of simulations with outcome"</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+  ggtitle<span class="token punctuation">(</span><span class="token string">"Histogram of number of games played in 1,000 simulations"</span><span class="token punctuation">,</span>
+  subtitle <span class="token operator">=</span> <span class="token string">"7-game series, 50% chance of winning each game"</span><span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment">## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span>
+    </code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+  <p>
+    <img src="../assets/images/unnamed-chunk-2-1.png" />
+  </p>
+
+
+  <p>You can make your own version of this chart using the <a
+      href="https://jon-downs.shinyapps.io/bestofsim/">interactive graph</a> I made!
+  </p>
+
+  <h2>How does our simulation stack up to the theory?</h2>
+  <p>
+    In this case, we could have calculated the probability using very few lines of R code. So let`s briefly introduce
+    the theory-based answer and see how our simulations stack up. The probability function we are looking for here in
+    the <a href="https://en.wikipedia.org/wiki/Binomial_distribution">PMF of the binomial distribution</a>. But what
+    arguments should we use to figure out the probability of a series going all the way? There are a few different ways
+    to come up with the inputs, but the one that is most intuitive to me is this:
+  </p>
+
+  <blockquote>
+    <p>
+      If neither team has won the series before the last game, then the series is guaranteed to go all the way. Thus, we
+      need the probability that n - 1 games have been played with both teams 1 game away from winning.
+    </p>
+  </blockquote>
+
+  <p>
+    So, if we know the threshold of wins required to win the series and the maximum number of games possible, then we
+    can subtract one from each and get the probability mass function at that value. Or, in R code:
+  </p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Using the PMF</span>
+allGamesProb <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>nGames<span class="token punctuation">,</span> pwin <span class="token operator">=</span> <span class="token number">0.5</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+x <span class="token operator">&lt;-</span> floor<span class="token punctuation">(</span>nGames<span class="token operator">/</span><span class="token number">2</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">)</span>
+dbinom<span class="token punctuation">(</span>x <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">,</span> nGames <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">,</span> pwin<span class="token punctuation">)</span>
+<span class="token punctuation">}</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<p>
+To close this blog out, let`s compare our theory-based estimate to our simulations. Let`s simulate 1,000 rounds for
+series of 7, 9, &hellip;19 games and look at the percent of simulations that went the full number of games. We will
+compare this to the calculated probability of such events using the binomial distribution.
+  </p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Function to get the percent of games that went 'all the way' for a given</span>
+<span class="token comment"># number of games in series/simulations</span>
+simSummary <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>nGames<span class="token punctuation">,</span> nSims <span class="token operator">=</span> <span class="token number">1000</span><span class="token punctuation">,</span> pwin <span class="token operator">=</span> <span class="token number">0.5</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+df <span class="token operator">&lt;-</span> simMulti<span class="token punctuation">(</span>nGames<span class="token punctuation">,</span> nSims<span class="token punctuation">,</span> pwin<span class="token punctuation">)</span>
+return<span class="token punctuation">(</span>data.frame<span class="token punctuation">(</span>nGames<span class="token punctuation">,</span> nSims<span class="token punctuation">,</span> pwin<span class="token punctuation">,</span> pAllTheWay <span class="token operator">=</span> sum<span class="token punctuation">(</span>df<span class="token operator">$</span>games <span class="token operator">==</span> nGames<span class="token punctuation">)</span><span class="token operator">/</span>nrow<span class="token punctuation">(</span>df<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># Run 1,000 simulations for series lengths 7-20</span>
+sims <span class="token operator">&lt;-</span> do.call<span class="token punctuation">(</span>rbind<span class="token punctuation">,</span> lapply<span class="token punctuation">(</span>seq<span class="token punctuation">(</span><span class="token number">7</span><span class="token punctuation">,</span> <span class="token number">19</span><span class="token punctuation">,</span> by <span class="token operator">=</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">,</span> simSummary<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Get the theory-based estimate of the probability</span>
+sims<span class="token operator">$</span>calc <span class="token operator">&lt;-</span> allGamesProb<span class="token punctuation">(</span>sims<span class="token operator">$</span>nGames<span class="token punctuation">)</span>
+
+<span class="token comment"># Compare theory (red line) to simulations (black line)</span>
+ggplot<span class="token punctuation">(</span>sims<span class="token punctuation">,</span> aes<span class="token punctuation">(</span>x <span class="token operator">=</span> nGames<span class="token punctuation">,</span> y <span class="token operator">=</span> pAllTheWay<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+geom_line<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+geom_line<span class="token punctuation">(</span>aes<span class="token punctuation">(</span>y <span class="token operator">=</span> calc<span class="token punctuation">)</span><span class="token punctuation">,</span> color <span class="token operator">=</span> <span class="token string">'red'</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+theme_minimal<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+ggtitle<span class="token punctuation">(</span><span class="token string">"Calculated versus simulated chances of going to the max number of games"</span><span class="token punctuation">,</span>
+subtitle <span class="token operator">=</span> <span class="token string">"by series length"</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+xlab<span class="token punctuation">(</span><span class="token string">"Number of games played"</span><span class="token punctuation">)</span> <span class="token operator">+</span> ylab<span class="token punctuation">(</span><span class="token string">"Frequency"</span><span class="token punctuation">)</span>
+</code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+  <p>
+    <img src="../assets/images/unnamed-chunk-4-1.png" />
+  </p>
+
+  <p>Statistics to the rescue! Looks like the theory hold up well in this case, but it is nice to know that we created a
+    simulation that achieves similar results. How could I have done this better? Let me know at <a
+      href="jon.d.downs@outlook.com">jon.d.downs@outlook.com</a>.</p>

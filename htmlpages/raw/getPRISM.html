@@ -1,0 +1,428 @@
+<h2>Introduction</h2>
+
+<p>
+  For a recent project, I was interested in temperature-level data at the
+  census tract level. I came across <a href="https://prism.oregonstate.edu/">the PRISM Climate
+    Group</a> at Oregon State. I needed data in
+  tabular format, but their data are in raster format. I wrote a simple
+  yet powerful R script that downloads a year&lsquo;s worth of daily temperature
+  data and converts them to CSV files with tract-level weather data for
+  the state of Washington. This article will walk through how to:</p>
+
+<ol>
+  <li>Download multiple .zip files</li>
+  <li>Unzip multiple .zip files</li>
+  <li>Use parallel processing in R</li>
+  <li>Convert raster data into CSV</li>
+</ol>
+
+<p>And, at the end, I will provide a link to an R script on GitHub that you
+  can use to make your own!</p>
+
+<h2>Getting set up</h2>
+
+<p>
+  First, I encourage you to click on that link above and read a bit about
+  <a href="https://prism.oregonstate.edu/">the PRISM Climate Group</a>, perhaps even
+  their <a href="https://prism.oregonstate.edu/participate/">citizen science program</a>. Eventually, you
+  might find your way to their <a href="https://ftp.prism.oregonstate.edu/daily/">FTP site</a>.
+  That is what we are interested in today. Before we download the data though, let&lsquo;s get our R
+  session set up properly:
+</p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Load libraries</span>
+library<span class="token punctuation">(</span>jsonlite<span class="token punctuation">)</span>
+library<span class="token punctuation">(</span>rvest<span class="token punctuation">)</span>
+library<span class="token punctuation">(</span>raster<span class="token punctuation">)</span>
+library<span class="token punctuation">(</span>rgdal<span class="token punctuation">)</span>
+library<span class="token punctuation">(</span>sp<span class="token punctuation">)</span>
+library<span class="token punctuation">(</span>tidyverse<span class="token punctuation">)</span>
+library<span class="token punctuation">(</span>parallel<span class="token punctuation">)</span>
+
+<span class="token comment"># Set year</span>
+year <span class="token operator">&lt;-</span> <span class="token number">2011</span>
+
+<span class="token comment"># Set up parallel runs (save 2 cores)</span>
+nc <span class="token operator">&lt;-</span> detectCores<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token number">2</span>
+cl <span class="token operator">&lt;-</span> makeCluster<span class="token punctuation">(</span>nc<span class="token punctuation">)</span>
+
+<span class="token comment"># Load configuration settings (using hidden environmental variable)</span>
+<span class="token comment"># TO USE: make a .JSON file a variable called dirPRISM where all this data</span>
+<span class="token comment"># will be stored</span>
+cfig_file <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>Sys.getenv<span class="token punctuation">(</span><span class="token string">'myrconfig'</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'extractPRISM.json'</span><span class="token punctuation">)</span>
+config <span class="token operator">&lt;-</span> jsonlite<span class="token operator">::</span>read_json<span class="token punctuation">(</span>cfig_file<span class="token punctuation">)</span>
+
+<span class="token comment"># Path to where all BIL files will download (make if necessary)</span>
+bil_dir <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>config<span class="token operator">$</span>dirPRISM<span class="token punctuation">,</span> <span class="token string">'TMAX/BIL/'</span><span class="token punctuation">)</span>
+dir.create<span class="token punctuation">(</span>bil_dir<span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Create a download directory for year TMAX data (make if necessary)</span>
+download_dir <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>bil_dir<span class="token punctuation">,</span> year<span class="token punctuation">,</span> <span class="token string">'/'</span><span class="token punctuation">)</span>
+dir.create<span class="token punctuation">(</span>download_dir<span class="token punctuation">)</span>
+
+<span class="token comment"># Where our final CSV files will go</span>
+csv_dir <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>config<span class="token operator">$</span>dirPRISM<span class="token punctuation">,</span> <span class="token string">'TMAX/CSV/'</span><span class="token punctuation">,</span> year<span class="token punctuation">,</span> <span class="token string">'/'</span><span class="token punctuation">)</span>
+dir.create<span class="token punctuation">(</span>csv_dir<span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span>
+
+tract10_fn <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>config<span class="token operator">$</span>tract10dir<span class="token punctuation">,</span> <span class="token string">"tract10.shp"</span><span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<p>
+  Let`s walk through all of that. First, we load rvest, the tidyverse, and
+  other libraries we will be using. Then, we set the year of data we want.
+  The very last step of this exercise is fairly power hungry, so we set up
+  parallel processing. In this example, we are saving two cores. I also
+  wanted to specify some directories for all of my downloads and final
+  files. I use a JSON config file to keep the code organized and portable.
+  A config file is a good place to store variables that would need to
+  change to run your code on another system. I also stored the path to my
+  config files in an environmental variable, mostly for privacy reasons.
+  My config file looks like this:</p>
+
+<div class="code-toolbar"><pre class="language-json" tabindex="0"><code class="language-json"><span class="token punctuation">{</span>
+    <span class="token property">"dirPRISM"</span><span class="token operator">:</span> <span class="token string">"C:/YOUR/FILE/PATH/HERE/"</span><span class="token punctuation">,</span>
+    <span class="token property">"tract10dir"</span><span class="token operator">:</span> <span class="token string">"Z:/NONE/OF/YOUR/BUSINESS/"</span>
+<span class="token punctuation">}</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<p>
+  Those two directories are the main directory where you want all the
+  PRISM data (raw and transformed) as well as the directory for your
+  census tract data file (more on that in a minute). From there, the
+  script names and creates the sub-directories needed to run the script.</p>
+
+<h2>Download data</h2>
+
+<p>
+  Next, we download a
+  <a href="https://www.loc.gov/preservation/digital/formats/fdd/fdd000283.shtml">bil</a>
+  file. A bil is a type of
+  <a
+    href="https://www.bu.edu/tech/support/research/training-consulting/online-tutorials/imagefiles/image101/#:%7E:text=A%20raster%20image%20file%20is,pixel%20should%20be%20displayed%20in.">raster</a>
+  file. In overly simple terms, a raster file is a combination of an image
+  that is color-coded by some variable and a metadata file that explains
+  the values associated with each color. The data are stored as one raster
+  per day of the year and measure (maximum temperature, minimum
+  temperature, etc.). The below chunk of code will download all bil files
+  for a given year at once, so allow a few minutes for it to complete. If
+  downloads fail, the script is designed to re-try any files that it may
+  have missed on the second run. The code:
+</p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># DOWNLOAD FILES ----------------------------------------------------------</span>
+<span class="token comment"># List all of the PRISM files on an FTP site</span>
+listPRISMFiles <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>var<span class="token punctuation">,</span> year<span class="token punctuation">)</span><span class="token punctuation">{</span>
+  var <span class="token operator">&lt;-</span> tolower<span class="token punctuation">(</span>var<span class="token punctuation">)</span>
+  lnk <span class="token operator">&lt;-</span> glue<span class="token operator">::</span>glue<span class="token punctuation">(</span><span class="token string">"https://ftp.prism.oregonstate.edu/daily/{var}/{year}"</span><span class="token punctuation">)</span>
+  ftp_txt <span class="token operator">&lt;-</span> read_html<span class="token punctuation">(</span>lnk<span class="token punctuation">)</span>
+  ftp_files <span class="token operator">&lt;-</span> html_attr<span class="token punctuation">(</span>html_nodes<span class="token punctuation">(</span>ftp_txt<span class="token punctuation">,</span> <span class="token string">'a'</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'href'</span><span class="token punctuation">)</span>
+  ftp_files <span class="token operator">&lt;-</span> ftp_files<span class="token punctuation">[</span>grepl<span class="token punctuation">(</span><span class="token string">'PRISM'</span><span class="token punctuation">,</span> ftp_files<span class="token punctuation">)</span><span class="token punctuation">]</span>
+  return<span class="token punctuation">(</span>list<span class="token punctuation">(</span>lnk <span class="token operator">=</span> lnk<span class="token punctuation">,</span> files <span class="token operator">=</span> ftp_files<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># Get TMAX files for year</span>
+files <span class="token operator">&lt;-</span> listPRISMFiles<span class="token punctuation">(</span>var <span class="token operator">=</span> <span class="token string">'tmax'</span><span class="token punctuation">,</span> year <span class="token operator">=</span> year<span class="token punctuation">)</span>
+
+<span class="token comment"># Check for already downloaded files (we don't want to download twice)</span>
+already_downloaded <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">'.zip'</span><span class="token punctuation">)</span>
+files<span class="token operator">$</span>files <span class="token operator">&lt;-</span> files<span class="token operator">$</span>files<span class="token punctuation">[</span><span class="token operator">!</span><span class="token punctuation">(</span>files<span class="token operator">$</span>files <span class="token percent-operator operator">%in%</span> already_downloaded<span class="token punctuation">)</span><span class="token punctuation">]</span>
+
+<span class="token comment"># Download all of the files specified</span>
+dlPRISMDaily <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>baselnk<span class="token punctuation">,</span> file<span class="token punctuation">,</span> outdir<span class="token punctuation">)</span><span class="token punctuation">{</span>
+  fn <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>baselnk<span class="token punctuation">,</span> <span class="token string">'/'</span><span class="token punctuation">,</span> file<span class="token punctuation">)</span>
+  download.file<span class="token punctuation">(</span>fn<span class="token punctuation">,</span> destfile <span class="token operator">=</span> paste0<span class="token punctuation">(</span>outdir<span class="token punctuation">,</span> file<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+dlPRISMDaily<span class="token punctuation">(</span>baselnk <span class="token operator">=</span> files<span class="token operator">$</span>lnk<span class="token punctuation">,</span> file <span class="token operator">=</span> files<span class="token operator">$</span>files<span class="token punctuation">,</span> outdir <span class="token operator">=</span> download_dir<span class="token punctuation">)</span>
+</code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<p>
+  We start by writing a function, <code>listPRISMfiles</code>. We are interested in
+  the PRISM varaible TMAX, or max temperature. We also provide the year.
+  These are used to populate the correct path to the resource on the FTP
+  website. The function will then search for all links on the page, and
+  pull the reference. It will keep any references that contain the string
+  `PRISM`, because that is a common pattern among the .bil files. The
+  function will return the base name of the hyperlink for all of the files
+  and a list of files available at the base link. After we write the
+  function, we run it and store it`s results in the `files` variable.
+  These are the files we might want to download. To avoid re-downloading
+  old data, a second step removes any files names already in our downloads
+  folder. If there are no new files, the script will throw a soft warning
+  about a non-zero exit status.
+</p>
+
+<h2>Unzip the data</h2>
+
+<p>
+  Next, we unzip the new data. We start by finding files with the .zip
+  pattern in our download folder. Similar to above, we also remove any
+  files that have previously been unzipped before we start. A quick helper
+  function is used to make the output directory name the same as the
+  zipped folder (minus the .zip).
+</p>
+
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># UNZIP FILES -------------------------------------------------------------</span>
+<span class="token comment"># Identify all of the .zip files in the directory we just created</span>
+unzip_fns <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">".zip"</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Identify already-unzipped versions of these files, remove from list</span>
+already_unzipped <span class="token operator">&lt;-</span> basename<span class="token punctuation">(</span>list.dirs<span class="token punctuation">(</span>download_dir<span class="token punctuation">)</span><span class="token punctuation">)</span>
+unzip_fns <span class="token operator">&lt;-</span> unzip_fns<span class="token punctuation">[</span><span class="token operator">!</span><span class="token punctuation">(</span>gsub<span class="token punctuation">(</span><span class="token string">'.zip'</span><span class="token punctuation">,</span> <span class="token string">''</span><span class="token punctuation">,</span> unzip_fns<span class="token punctuation">)</span> <span class="token percent-operator operator">%in%</span> already_unzipped<span class="token punctuation">)</span><span class="token punctuation">]</span>
+
+<span class="token comment"># Unzip the files that need it</span>
+lapply<span class="token punctuation">(</span>unzip_fns<span class="token punctuation">,</span> <span class="token keyword">function</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+unzip<span class="token punctuation">(</span>paste0<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> x<span class="token punctuation">)</span><span class="token punctuation">,</span>
+exdir <span class="token operator">=</span> paste0<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> <span class="token string">'/'</span><span class="token punctuation">,</span> gsub<span class="token punctuation">(</span><span class="token string">".zip"</span><span class="token punctuation">,</span> <span class="token string">''</span><span class="token punctuation">,</span> x<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<h2>Explore the data!</h2>
+<p>
+  Okay, we have some data! Now, let&lsquo;s read it in and take a peek.
+</p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Identify the first .bil file</span>
+myBilFile <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">'.bil$'</span><span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
+myRast <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>raster<span class="token punctuation">(</span>paste0<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> myBilFile<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+plot<span class="token punctuation">(</span>myRast<span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<p><img src="../assets/images/prismTempsP1.png" alt=""></p>
+
+<p>
+  Voila! A color-coded heat map of max US temperatures on 1/1/2011. As
+  mentioned, our desired format is tabular data with maximum temperature
+  by the census tract level. To accomplish this, we will add a shape file
+  that includes census tract boundaries. Then, we can use a function to
+  extract the average maximum temperature value across that entire
+  geography, and report that as the maximum temperature for the area. Our
+  shapefile comes from the
+  <a href="https://ofm.wa.gov/washington-data-research/population-demographics/gis-data/census-geographic-files">
+    Washington Office of Financial Management`s (OFM)
+  </a> shape files for Washington State. Download those files, unzip them, and
+  point to them with the &lsquo;tract10dir&rsquo; variable in your configuration file.
+  Next, we look at the shape file and raster image on the same plot. This
+  requires them to be in the same projection:
+</p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Read in shapefile, convert to new CRS</span>
+waCensus10 <span class="token operator">&lt;-</span> readOGR<span class="token punctuation">(</span>tract10_fn<span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r">shp_reproj <span class="token operator">&lt;-</span> sp<span class="token operator">::</span>spTransform<span class="token punctuation">(</span>waCensus10<span class="token punctuation">,</span> crs<span class="token punctuation">(</span>myRast<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Plot raster and overlay shapefile</span>
+plot<span class="token punctuation">(</span>myRast<span class="token punctuation">)</span>
+plot<span class="token punctuation">(</span>shp_reproj<span class="token punctuation">,</span> bg <span class="token operator">=</span> <span class="token string">'transparent'</span><span class="token punctuation">,</span> add <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<div class="code-toolbar"><pre class="language-bash" tabindex="0"><code class="language-bash"><span class="token comment">## Warning in OGRSpatialRef(dsn, layer, morphFromESRI = morphFromESRI, dumpSRS = dumpSRS, : Discarded datum</span>
+NAD83_High_Accuracy_Reference_Network
+<span class="token comment">## in Proj4 definition: +proj=lcc +lat_0=45.3333333333333 +lon_0=-120.5 +lat_1=45.8333333333333</span>
++lat_2<span class="token operator">=</span><span class="token number">47.3333333333333</span> +x_0<span class="token operator">=</span><span class="token number">500000</span> +y_0<span class="token operator">=</span><span class="token number">0</span>
+<span class="token comment">## +ellps=GRS80 +units=us-ft +no_defs</span>
+
+<span class="token comment">## OGR data source with driver: ESRI Shapefile</span>
+<span class="token comment">## Source: "D:\PRISM\tract10\tract10.shp", layer: "tract10"</span>
+<span class="token comment">## with 1458 features</span>
+<span class="token comment">## It has 34 fields</span>
+<span class="token comment">## Integer64 fields read as strings: ALANDM AWATERM</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<p><img src="../assets/images/prismTempsP2.png" alt=""></p>
+
+<p>
+  The scale appears to be correct, but there is one problem: the area
+  covered by the raster (background image) is much larger than our census
+  tract borders. Having extra raster data would slow down a future step in
+  our process, so we will use the crop function to take a Washington-sized
+  slice of the raster file.
+</p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Subset the raster image to speed things up</span>
+myRast2 <span class="token operator">&lt;-</span> crop<span class="token punctuation">(</span>myRast<span class="token punctuation">,</span> shp_reproj<span class="token punctuation">)</span>
+plot<span class="token punctuation">(</span>myRast2<span class="token punctuation">)</span>
+plot<span class="token punctuation">(</span>shp_reproj<span class="token punctuation">,</span> bg <span class="token operator">=</span> <span class="token string">'transparent'</span><span class="token punctuation">,</span> add <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span>
+</code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<p><img src="../assets/images/prismTempsP3.png" alt=""></p>
+
+<h2>Extract the data</h2>
+
+<p>
+  Now, we use our correctly projected shape file and our cropped raster file to extract
+  the average maximum temperature over each census tract for the day. We are working
+  with 1/1/2011 in this example.
+</p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Get mean temp across each boundary</span>
+myExtract <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>extract<span class="token punctuation">(</span>myRast2<span class="token punctuation">,</span> shp_reproj<span class="token punctuation">,</span> fun <span class="token operator">=</span> mean<span class="token punctuation">)</span>
+
+<span class="token comment"># Put in dataframe format, add date and tract identifiers</span>
+myOutputData <span class="token operator">&lt;-</span> data.frame<span class="token punctuation">(</span><span class="token string">'GEOID10'</span> <span class="token operator">=</span> shp_reproj<span class="token operator">@</span>data<span class="token operator">$</span>GEOID10<span class="token punctuation">,</span>
+date <span class="token operator">=</span> as.Date<span class="token punctuation">(</span><span class="token string">'2011-01-01'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+TMAX <span class="token operator">=</span> myExtract<span class="token punctuation">)</span>
+
+<span class="token comment"># Take a peek at the data</span>
+head<span class="token punctuation">(</span>myOutputData<span class="token punctuation">)</span>
+</code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Convert raster to CSV ---------------------------------------------------</span>
+<span class="token comment"># Only do 10 files for demonstration purposes.</span>
+n_ras_to_csv <span class="token operator">&lt;-</span> <span class="token number">10</span>
+
+<span class="token comment"># Identify all files ending with .bil (no zip)</span>
+prismBils <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>
+  download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">'.bil$'</span><span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span>
+<span class="token punctuation">)</span>
+
+outunzip_fns <span class="token operator">&lt;-</span> basename<span class="token punctuation">(</span>dirname<span class="token punctuation">(</span>prismBils<span class="token punctuation">)</span><span class="token punctuation">)</span>
+excludes <span class="token operator">&lt;-</span> which<span class="token punctuation">(</span>file.exists<span class="token punctuation">(</span>paste0<span class="token punctuation">(</span>csv_dir<span class="token punctuation">,</span> outunzip_fns<span class="token punctuation">,</span> <span class="token string">'.csv'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># If CSVs already exist, we don't need to run this script on them again</span>
+<span class="token keyword">if</span><span class="token punctuation">(</span><span class="token operator">!</span>identical<span class="token punctuation">(</span>excludes<span class="token punctuation">,</span> integer<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+  prismBils <span class="token operator">&lt;-</span> prismBils<span class="token punctuation">[</span><span class="token operator">-</span>excludes<span class="token punctuation">]</span>
+  outunzip_fns <span class="token operator">&lt;-</span> outunzip_fns<span class="token punctuation">[</span><span class="token operator">-</span>excludes<span class="token punctuation">]</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># Date column to add to each entry</span>
+dates <span class="token operator">&lt;-</span> as.Date<span class="token punctuation">(</span>
+sub<span class="token punctuation">(</span><span class="token string">".*([0-9.]{8}).*"</span><span class="token punctuation">,</span> <span class="token string">"\\1"</span><span class="token punctuation">,</span> basename<span class="token punctuation">(</span>prismBils<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+format <span class="token operator">=</span> <span class="token string">"%Y%m%d"</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Read in CT shapefile file and a single BIL. Reproject shapefile.</span>
+waCensus10 <span class="token operator">&lt;-</span> readOGR<span class="token punctuation">(</span>tract10_fn<span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<p>
+  And there you go! A single raster file, turned into a data frame.
+  But….we have 365 raster files. Thankfully, we are all set up to do
+  parallel processing. Let&lsquo;s turn our shape file re-project -&gt; crop
+  raster -&gt; extract data process into a function. It will take some more
+  work up front, because we need to programmatically figure out the date
+  instead of hard-coding it. However, it is possible: each file contains
+  the date as an 8 digit string. I also want to save each result to file.
+  For now, it will be useful to have a CSV file for each raster image. It
+  will help us stay organized and quickly identify which files have
+  already been converted in case we spread the work out over multiple
+  script runs.
+</p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Convert raster to CSV ---------------------------------------------------</span>
+<span class="token comment"># Only do 10 files for demonstration purposes.</span>
+n_ras_to_csv <span class="token operator">&lt;-</span> <span class="token number">10</span>
+
+<span class="token comment"># Identify all files ending with .bil (no zip)</span>
+prismBils <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>
+  download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">'.bil$'</span><span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span>
+<span class="token punctuation">)</span>
+
+outunzip_fns <span class="token operator">&lt;-</span> basename<span class="token punctuation">(</span>dirname<span class="token punctuation">(</span>prismBils<span class="token punctuation">)</span><span class="token punctuation">)</span>
+excludes <span class="token operator">&lt;-</span> which<span class="token punctuation">(</span>file.exists<span class="token punctuation">(</span>paste0<span class="token punctuation">(</span>csv_dir<span class="token punctuation">,</span> outunzip_fns<span class="token punctuation">,</span> <span class="token string">'.csv'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># If CSVs already exist, we don't need to run this script on them again</span>
+<span class="token keyword">if</span><span class="token punctuation">(</span><span class="token operator">!</span>identical<span class="token punctuation">(</span>excludes<span class="token punctuation">,</span> integer<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+  prismBils <span class="token operator">&lt;-</span> prismBils<span class="token punctuation">[</span><span class="token operator">-</span>excludes<span class="token punctuation">]</span>
+  outunzip_fns <span class="token operator">&lt;-</span> outunzip_fns<span class="token punctuation">[</span><span class="token operator">-</span>excludes<span class="token punctuation">]</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># Date column to add to each entry</span>
+dates <span class="token operator">&lt;-</span> as.Date<span class="token punctuation">(</span>
+sub<span class="token punctuation">(</span><span class="token string">".*([0-9.]{8}).*"</span><span class="token punctuation">,</span> <span class="token string">"\\1"</span><span class="token punctuation">,</span> basename<span class="token punctuation">(</span>prismBils<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+format <span class="token operator">=</span> <span class="token string">"%Y%m%d"</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Read in CT shapefile file and a single BIL. Reproject shapefile.</span>
+waCensus10 <span class="token operator">&lt;-</span> readOGR<span class="token punctuation">(</span>tract10_fn<span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<div class="code-toolbar"><pre class="language-bash" tabindex="0"><code class="language-bash"><span class="token comment">## Warning in OGRSpatialRef(dsn, layer, morphFromESRI = morphFromESRI, dumpSRS = dumpSRS, : Discarded datum</span>
+NAD83_High_Accuracy_Reference_Network
+<span class="token comment">## in Proj4 definition: +proj=lcc +lat_0=45.3333333333333 +lon_0=-120.5 +lat_1=45.8333333333333</span>
++lat_2<span class="token operator">=</span><span class="token number">47.3333333333333</span> +x_0<span class="token operator">=</span><span class="token number">500000</span> +y_0<span class="token operator">=</span><span class="token number">0</span>
+<span class="token comment">## +ellps=GRS80 +units=us-ft +no_defs</span>
+
+<span class="token comment">## OGR data source with driver: ESRI Shapefile</span>
+<span class="token comment">## Source: "C:\YOURPATH\tract10.shp", layer: "tract10"</span>
+<span class="token comment">## with 1458 features</span>
+<span class="token comment">## It has 34 fields</span>
+<span class="token comment">## Integer64 fields read as strings: ALANDM AWATERM</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r">myBilFile <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">'.bil$'</span><span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
+myRast <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>raster<span class="token punctuation">(</span>paste0<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> myBilFile<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+waCensus10_transform <span class="token operator">&lt;-</span> spTransform<span class="token punctuation">(</span>waCensus10<span class="token punctuation">,</span> crs<span class="token punctuation">(</span>myRast<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># Function to make a single PRISM csv file</span>
+makePRISMcsv <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>prismBil<span class="token punctuation">,</span> outdir<span class="token punctuation">,</span> outfn<span class="token punctuation">,</span> shp<span class="token punctuation">,</span> varname<span class="token punctuation">,</span> funx<span class="token punctuation">,</span> date<span class="token punctuation">)</span><span class="token punctuation">{</span>
+  prismRast <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>raster<span class="token punctuation">(</span>prismBil<span class="token punctuation">)</span>
+  prismRast_crop <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>crop<span class="token punctuation">(</span>prismRast<span class="token punctuation">,</span> shp<span class="token punctuation">)</span>
+  extr <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>extract<span class="token punctuation">(</span>prismRast_crop<span class="token punctuation">,</span> shp<span class="token punctuation">,</span> fun <span class="token operator">=</span> funx<span class="token punctuation">)</span>
+  out <span class="token operator">&lt;-</span> data.frame<span class="token punctuation">(</span>shp<span class="token operator">@</span>data<span class="token operator">$</span>GEOID10<span class="token punctuation">,</span> date<span class="token punctuation">,</span> extr<span class="token punctuation">)</span>
+  colnames<span class="token punctuation">(</span>out<span class="token punctuation">)</span> <span class="token operator">&lt;-</span> c<span class="token punctuation">(</span><span class="token string">'GEOID10'</span><span class="token punctuation">,</span> <span class="token string">'DATE'</span><span class="token punctuation">,</span> varname<span class="token punctuation">)</span>
+  dir.create<span class="token punctuation">(</span>outdir<span class="token punctuation">)</span>
+  data.table<span class="token operator">::</span>fwrite<span class="token punctuation">(</span>out<span class="token punctuation">,</span> paste0<span class="token punctuation">(</span>outdir<span class="token punctuation">,</span> outfn<span class="token punctuation">,</span> <span class="token string">'.csv'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+  return<span class="token punctuation">(</span>out<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+<span class="token comment"># Run script in parallel, stop when finished.</span>
+addArgs <span class="token operator">&lt;-</span> list<span class="token punctuation">(</span>funx <span class="token operator">=</span> mean<span class="token punctuation">,</span> varname <span class="token operator">=</span> <span class="token string">'TMAX'</span><span class="token punctuation">,</span> shp <span class="token operator">=</span> waCensus10_transform<span class="token punctuation">,</span>
+  outdir <span class="token operator">=</span> csv_dir<span class="token punctuation">)</span>
+parallel<span class="token operator">::</span>clusterMap<span class="token punctuation">(</span>cl <span class="token operator">=</span> cl<span class="token punctuation">,</span>
+  fun <span class="token operator">=</span> makePRISMcsv<span class="token punctuation">,</span>
+  prismBil <span class="token operator">=</span> paste0<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> prismBils<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token operator">:</span>n_ras_to_csv<span class="token punctuation">]</span><span class="token punctuation">,</span>
+  outfn <span class="token operator">=</span> outunzip_fns<span class="token punctuation">[</span><span class="token number">1</span><span class="token operator">:</span>n_ras_to_csv<span class="token punctuation">]</span><span class="token punctuation">,</span>
+  date <span class="token operator">=</span> dates<span class="token punctuation">[</span><span class="token number">1</span><span class="token operator">:</span>n_ras_to_csv<span class="token punctuation">]</span><span class="token punctuation">,</span>
+  MoreArgs <span class="token operator">=</span> addArgs
+<span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<div class="code-toolbar"><pre class="language-bash" tabindex="0"><code class="language-bash"><span class="token comment">##$`C:/YOURFILEPATH/PRISM/TMAX/BIL/2011/PRISM_tmax_stable_4kmD2_20110121_bil/PRISM_tmax_stable_4kmD2_20110121_bil.bil`</span>
+<span class="token comment">## GEOID10 DATE TMAX</span>
+<span class="token comment">## 1 53001950100 2011-01-21 1.686708</span>
+<span class="token comment">## 2 53001950200 2011-01-21 2.760489</span>
+<span class="token comment">## 3 53001950300 2011-01-21 3.439578</span>
+<span class="token comment">## 4 53001950400 2011-01-21 3.581000</span>
+<span class="token comment">## 5 53001950500 2011-01-21 3.602333</span>
+<span class="token comment">## 6 53003960100 2011-01-21 2.815904</span>
+<span class="token comment">## 7 53003960200 2011-01-21 3.601333</span>
+<span class="token comment">## 8 53003960300 2011-01-21 3.194000</span>
+<span class="token comment">## 9 53003960400 2011-01-21 3.142500</span>
+<span class="token comment">## 10 53003960500 2011-01-21 3.194000</span>
+<span class="token comment">## 11 53003960600 2011-01-21 3.067500</span>
+<span class="token comment">## 12 53005010100 2011-01-21 7.329250</span>
+<span class="token comment">## 13 53005010201 2011-01-21 7.319000</span>
+<span class="token comment">## 14 53005010202 2011-01-21 7.364000</span>
+<span class="token comment">## 15 53005010300 2011-01-21 7.638000</span>
+<span class="token comment">## 16 53005010400 2011-01-21 7.554000</span>
+<span class="token comment">## 17 53005010500 2011-01-21 7.554000</span>
+<span class="token comment">## 18 53005010600 2011-01-21 7.803000</span>
+<span class="token comment">## 19 53005010701 2011-01-21 6.926500</span>
+<span class="token comment">## 20 53005010703 2011-01-21 7.241000</span>
+<span class="token comment">## 21 53005010705 2011-01-21 7.132750</span>
+<span class="token comment">## 22 53005010707 2011-01-21 7.023667</span>
+<span class="token comment">## 23 53005010708 2011-01-21 7.357500</span>
+<span class="token comment">## 24 53005010803 2011-01-21 7.128000</span>
+<span class="token comment">## 25 53005010805 2011-01-21 8.038000</span>
+<span class="token comment">## 26 53005010807 2011-01-21 6.401000</span>
+<span class="token comment">## 27 53005010809 2011-01-21 8.334500</span>
+<span class="token comment">## 28 53005010810 2011-01-21 8.539000</span>
+
+<span class="token punctuation">..</span><span class="token punctuation">..</span>
+Output manually truncated <span class="token keyword">for</span> this blog post.
+<span class="token punctuation">..</span><span class="token punctuation">..</span>
+
+<span class="token comment">## [ reached 'max' / getOption("max.print") -- omitted 1125 rows ]</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+
+<h2>Conclusion</h2>
+
+<p>First, as promised: <a href="https://github.com/JonDDowns/blog_markdowns/tree/main/getPRISMData">the Github code for
+    the
+    script</a>.</p>
+
+<p>
+  To recap, we wrote R code that downloaded data, unzipped them, and extracted data
+  from a raster file. We kept organized by using a logical file structure, and had
+  mechanisms in place to identify files that had already been processed. We used data
+  subsets and parallel processing to speed up the script`s performance. Not too bad for 122 lines of code!
+</p>

@@ -1,0 +1,964 @@
+<p>
+  Coding has come a long way in my field in a short amount of time. As recently as 5
+  years ago, most analysis was done in SAS. R was for the most advanced of analysts. Later,
+  R began growing rapidly as the prospect of job automation took hold. Now, more Python users
+  are coming into the fold, and the great &quot;R vs. Python&quot; debate has begun.
+  <a
+    href="https://www.linkedin.com/posts/alex-freberg_python-is-better-than-r-activity-6752637240578600960-a36V/?trk=public_profile_like_view&amp;originalSubdomain=ke">Click-bait
+    hot takes</a>
+  abound on the web. This is to be expected. Data scientists tend to be pretty opinionated.
+</p>
+
+<h2>A summary of the R vs. Python Debate</h2>
+<p>
+  There is no shortage of posts about this topic, so I will keep it short. The Python folks argue that <a
+    href="https://pypl.github.io/PYPL.html">Python is the most popular coding language</a>. The sheer size of the
+  community means that it will always be able to do more. R is fussy and esoteric, they say. The R side points out that
+  R packages, especially those used in modeling, are often maintained by the top experts in their respective fields (<a
+    href="https://cran.r-project.org/web/packages/survival/index.html">survival analysis</a>, <a
+    href="https://www.taylorfrancis.com/books/mono/10.1201/9781315370279/generalized-additive-models-simon-wood">Generalized
+    Additive Models</a>, and <a href="https://cran.r-project.org/web/packages/EpiModel/index.html">Epidemiological
+    Network models</a>, to name a few). Additionally, the <a href="https://www.jstatsoft.org/index">Journal of
+    Statistical Software</a> is an academic publication that introduces and explains software implementations of new
+  statistical methods, and R is the most common choice.
+</p>
+
+<h2>Why the Debate Misses the Point</a></h2>
+<p>
+  The R vs. Python debate is largely counterproductive because it places the focus on the language instead of the
+  analyst. The biggest risk to your data science career is not &quot;choosing the wrong language&quot;, it is stubbornly
+  choosing to work with only one language. Some of the oldest programming languages, COBOL and FORTRAN, are <a
+    href="https://www.nytimes.com/2022/07/06/technology/cobol-jobs.html">highly desired in the financial sector</a>
+  precisely because they perform critical roles in the financial code base whilst being known by very few people.
+  Speaking of FORTRAN, it is still used in both <a
+    href="https://www.r-bloggers.com/2014/04/fortran-and-r-speed-things-up/">R</a> and <a
+    href="https://fortranwiki.org/fortran/show/Python">Python</a>. When there is an optimal and proper solution to a
+  problem, the code tends to live forever, no matter the language. And, of course, new languages will be developed, such
+  as <a href="https://julialang.org/">Julia</a>. Stick to one language at your own peril.
+</p>
+
+<p>
+  I am reminded of a story from my own life. Early in the COVID-19 pandemic, my wife and I got really into cycling.
+  After consistent improvement early on, I hit a plateau. I wanted to upgrade my mountain bike for a $3,000 road bike.
+  The road bike was perfectly engineered for the task: 11 pounds lighter with thinner tires to reduce friction. But, I
+  soon realized something: the same gains and more were achievable if I rode my current bike more and stopped having
+  post-ride beers on the weekends. Better yet, I would be the one who is 11 pounds lighter, not my bike.
+  Talk about portable! So it is with data science: people often get frustrated and switch to shiny new tools instead of
+  truly investing in their professional development. The worst part is, it tends to happen right as they were scratching
+  the surface of a new, core concept in computer science, such as apply functions or multithreaded processing.
+</p>
+
+<h2>Common Data Science Tasks in R and Python</h2>
+<p>
+  I will let you in on a little secret: R and Python look pretty darn similar for many data
+  science tasks. To show you just how similar they can be, this blog post will walk through how
+  both R and Python:
+</p>
+
+<ol>
+  <li>Install and load special modules and packages developed by the community</li>
+  <li>Work with the filesystem and system commands</li>
+  <li>Connect to SQL databases and extract data</li>
+  <li>Basic data exploration: understand what kinds of data you have and how many records there are</li>
+</ol>
+
+<p>
+  Future posts will cover other topics, such as data aggregation and/or data visualization. For some of the database
+  tasks, I will connect to a SQL server instance I stood up on a personal cloud account.
+  If you would like to stand up your own version, Microsoft has a tutorial <a
+    href="https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure?view=sql-server-ver16&amp;tabs=ssms#deploy-to-azure-sql-database">here</a>.
+</p>
+
+<h2>Modules and Packages: Install, Load, Use</h2>
+
+<p>Really, there are four notable differences here:</p>
+
+<ol>
+  <li>Python calls them &quot;Modules&quot;, and R calls them &quot;Packages&quot;</li>
+  <li>R packages are installed in an R session while Python modules are installed from the shell</li>
+  <li>As long as an R package has been installed, it can be called using the pkg::function() syntax.
+    Python modules must always be loaded before use.</li>
+  <li>Python modules rely heavily on classes, where R tends to use more functions.</li>
+</ol>
+
+<p>
+  Let&lsquo;s speak to the last point briefly. Classes are objects with pre-defined structures, attributes, and methods.
+  For example, the Python pandas module has a DataFrame class that has the attribute head to call the first few rows.
+  For a pandas DataFrame called myDf, this attribute could be accessed with myDf.head(). R tends to use functions
+  instead. In R, head is a function that can can be used on almost any object, and can be called with head(myDf). I
+  suspect this is due to differences in philosophy: Python is a multi-purpose language that prioritizes and enforces
+  rules to keep code organized and readable. R was built for a more specific purpose, so it prioritizes flexibility in
+  its functions so that an analyst has the same tools for dataframes, matrices, or whatever object they happen to be
+  working with that day. By the way, this idea of one mechanism working on multiple types is called <a
+    href="https://bookdown.dongzhuoer.com/hadley/adv-r/s4-dispatch.html">method dispatching</a>.
+</p>
+
+<h3>Python</h3>
+<p>
+  In Python, pip is the base package installer, but other options (like <a
+    href="https://www.anaconda.com/">Anaconda</a>) exist. In either case, the syntax in similar:
+</p>
+
+<div class="code-toolbar">
+  <pre class="language-shell" tabindex="0"><code class="language-shell">$ pip <span
+        class="token function">install</span> numpy
+      Defaulting to user installation because normal site-packages is not writeable
+      Requirement already satisfied: numpy <span class="token keyword">in</span>
+      /home/jondowns/.local/lib/python3.10/site-packages <span class="token punctuation">(</span><span
+        class="token number">1.23</span>.5<span class="token punctuation">)</span>
+      Note: you may need to restart the kernel to use updated packages.</code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<p>
+  After installing modules, it is now available in a Python session. Now, we can start coding in our preferred editor.
+</p>
+
+<div class="code-toolbar">
+  <pre class="language-python" tabindex="0"><code class="language-python"><span class="token comment"># Modules need to
+        be explicitly loaded</span>
+      <span class="token keyword">import</span> sqlchemy <span class="token keyword">as</span> sa
+      <span class="token keyword">import</span> pandas <span class="token keyword">as</span> pd
+      <span class="token keyword">import</span> os
+      <span class="token keyword">import</span> re
+      <span class="token keyword">import</span> glob
+
+      <span class="token comment"># You can also import specific subsets of a package</span>
+      <span class="token keyword">from</span> urllib <span class="token keyword">import</span> request</code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<p>
+  Python modules tend to make more heavy use of classes. In short, a class is a pre-defined with a certain structure.
+  For example, pandas Python modules tend to have lots of sub-modules and attributes. For example, urllib has many
+  modules, but in data science the &quot;request&quot; module is the most commonly used. In such cases, you may want to
+  only import the specific part of the module that you need for the task at hand.
+</p>
+
+<div class="code-toolbar">
+  <pre class="language-python" tabindex="0"><code class="language-python"><span class="token comment"># Not using "pd"
+        for pandas causes an error</span>
+      <span class="token keyword">try</span><span class="token punctuation">:</span>
+      DataFrame<span class="token punctuation">(</span><span class="token punctuation">{</span><span
+        class="token string">"mycol"</span><span class="token punctuation">:</span> <span
+        class="token builtin">range</span><span class="token punctuation">(</span><span
+        class="token number">0</span><span class="token punctuation">,</span><span class="token number">9</span><span
+        class="token punctuation">)</span><span class="token punctuation">}</span><span
+        class="token punctuation">)</span><span class="token punctuation">.</span>head<span
+        class="token punctuation">(</span><span class="token punctuation">)</span>
+      <span class="token keyword">except</span><span class="token punctuation">:</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Well,
+        that didn't work...\n\n"</span><span class="token punctuation">)</span>
+
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"This
+        works, though!"</span><span class="token punctuation">)</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span>pd<span
+        class="token punctuation">.</span>DataFrame<span class="token punctuation">(</span><span
+        class="token punctuation">{</span><span class="token string">"mycol"</span><span
+        class="token punctuation">:</span> <span class="token builtin">range</span><span
+        class="token punctuation">(</span><span class="token number">0</span><span
+        class="token punctuation">,</span><span class="token number">9</span><span
+        class="token punctuation">)</span><span class="token punctuation">}</span><span
+        class="token punctuation">)</span><span class="token punctuation">.</span>head<span
+        class="token punctuation">(</span><span class="token punctuation">)</span><span
+        class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>mycol</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>5</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>8</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>R</h3>
+
+<p>
+  As previously mentioned, R packages are installed within a session. You may be asked to select a &quot;mirror&quot;
+  the first time you install a package. Just use the cloud mirror. Any packages that are installed can be loaded with
+  the library command. Note that the quotes are no longer needed after a package has been installed.
+</p>
+
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Install packages in R
+        using install.packages()</span>
+      <span class="token comment"># install.packages("jsonlite")</span>
+      <span class="token comment"># Load packages with the "library" command</span>
+      library<span class="token punctuation">(</span>jsonlite<span class="token punctuation">)</span>
+      library<span class="token punctuation">(</span>tidyverse<span class="token punctuation">)</span>
+      library<span class="token punctuation">(</span>odbc<span class="token punctuation">)</span>
+      library<span class="token punctuation">(</span>DBI<span class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<p>
+  You might see conflicts when you do this-- more on that in a minute. The tidyverse is a bit of a special case: it is a
+  set of packages designed to modernize base R, both for performance and to be more intuitive. So when you load the
+  tidyverse package, you're actually loading a universe of packages (hence the name). After a package is loaded, any
+  functions from that package can be called. R is structured a little differently than Python here. In the Python
+  example above, we had to reference the package pandas (pd) to call the data.frame command. In R, loading the library
+  is sufficient:
+</p>
+
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Use mutate from one of the
+        packages in the tidyverse</span>
+      print<span class="token punctuation">(</span>
+      mutate<span class="token punctuation">(</span>data.frame<span class="token punctuation">(</span>nums <span
+        class="token operator">=</span> <span class="token number">1</span><span class="token operator">:</span><span
+        class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+      new <span class="token operator">=</span> cumsum<span class="token punctuation">(</span>nums<span
+        class="token punctuation">)</span>
+      <span class="token punctuation">)</span>
+    </code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+<thead>
+  <tr>
+    <th scope=col>nums</th>
+    <th scope=col>new</th>
+  </tr>
+  <tr>
+    <th scope=col>&lt;int&gt;</th>
+    <th scope=col>&lt;int&gt;</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td> 1</td>
+    <td> 1</td>
+  </tr>
+  <tr>
+    <td> 2</td>
+    <td> 3</td>
+  </tr>
+  <tr>
+    <td> 3</td>
+    <td> 6</td>
+  </tr>
+  <tr>
+    <td> 4</td>
+    <td>10</td>
+  </tr>
+  <tr>
+    <td> 5</td>
+    <td>15</td>
+  </tr>
+  <tr>
+    <td> 6</td>
+    <td>21</td>
+  </tr>
+  <tr>
+    <td> 7</td>
+    <td>28</td>
+  </tr>
+  <tr>
+    <td> 8</td>
+    <td>36</td>
+  </tr>
+  <tr>
+    <td> 9</td>
+    <td>45</td>
+  </tr>
+  <tr>
+    <td>10</td>
+    <td>55</td>
+  </tr>
+</tbody>
+</table>
+
+<p>
+  If you did want to be explicit, you could use the package::fuction() notation. It can be used when multiple libraries
+  use the same function name. By default, R will choose the function that was loaded last when 2+ functions have the
+  same name. Many times, the package author INTENDED to overwrite a base R function, so in practice function masking is
+  not a big problem. Python handles the same problem by forcing you to always be explicit. I must admit, I like the
+  Python philosophy more here.
+</p>
+
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># As long as an R package is
+        installed, you can access its functions</span>
+      <span class="token comment"># like this</span>
+      dplyr<span class="token operator">::</span>mutate<span class="token punctuation">(</span>data.frame<span
+        class="token punctuation">(</span>nums<span class="token operator">=</span><span
+        class="token number">1</span><span class="token operator">:</span><span class="token number">5</span><span
+        class="token punctuation">)</span><span class="token punctuation">,</span> new <span
+        class="token operator">=</span> cumsum<span class="token punctuation">(</span>nums<span
+        class="token punctuation">)</span><span class="token punctuation">)</span>
+    </code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<table>
+  <caption>data.frame: 5 × 2</caption>
+  <thead>
+    <tr>
+      <th>nums</th>
+      <th>new</th>
+    </tr>
+    <tr>
+      <th>&lt;int&gt;</th>
+      <th>&lt;int&gt;</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td> 1</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td> 3</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td> 6</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>15</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Explore the filesystem and access system commands</h2>
+<p>
+  An underrated skill in data science is folder searching and navigating the filesystem. For example, I frequently have
+  lots of CSV files with identical formats for multiple days listed in the same folder. Luckily, both R and Python have
+  simple tools for this.
+</p>
+
+<h3>Python</h3>
+
+<div class="code-toolbar">
+  <pre class="language-python" tabindex="0"><code class="language-python"><span class="token keyword">print</span><span
+        class="token punctuation">(</span>os<span class="token punctuation">.</span>getcwd<span
+        class="token punctuation">(</span><span class="token punctuation">)</span><span
+        class="token punctuation">)</span> <span class="token comment"># Prints working directory path</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span>os<span
+        class="token punctuation">.</span>listdir<span class="token punctuation">(</span><span
+        class="token string">"."</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+      <span class="token comment"># List files in working directory</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span>os<span
+        class="token punctuation">.</span>listdir<span class="token punctuation">(</span><span
+        class="token string">".."</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+      <span class="token comment"># List files in parent directory</span>
+
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"\nUse
+        globa module to look for files that match certain pattern"</span><span class="token punctuation">)</span>
+      glob<span class="token punctuation">.</span>glob<span class="token punctuation">(</span><span
+        class="token string">"./*.ipynb"</span><span class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<div class="code-toolbar">
+  <pre class="language-python" tabindex="0"><code class="language-python"><span class="token operator">/</span>home<span
+        class="token operator">/</span>jondowns<span class="token operator">/</span>Documents<span
+        class="token operator">/</span>blog_markdowns<span class="token operator">/</span>RUserPyGuide
+      <span class="token punctuation">[</span><span class="token string">'basics.py'</span><span
+        class="token punctuation">,</span> <span class="token string">'basics.r'</span><span
+        class="token punctuation">,</span> <span class="token string">'.ipynb_checkpoints'</span><span
+        class="token punctuation">,</span> <span class="token string">'TextAndPy.ipynb'</span><span
+        class="token punctuation">,</span>
+      <span class="token string">'R.ipynb'</span><span class="token punctuation">,</span> <span
+        class="token string">'dsPrimaDonna.png'</span><span class="token punctuation">]</span>
+      <span class="token punctuation">[</span><span class="token string">'.git'</span><span
+        class="token punctuation">,</span> <span class="token string">'.gitignore'</span><span
+        class="token punctuation">,</span> <span class="token string">'blog_markdowns.Rproj'</span><span
+        class="token punctuation">,</span> <span class="token string">'gamesToWin'</span><span
+        class="token punctuation">,</span> <span class="token string">'getPRISMData'</span><span
+        class="token punctuation">,</span>
+      <span class="token string">'isPalindrome'</span><span class="token punctuation">,</span> <span
+        class="token string">'makeNbaDb'</span><span class="token punctuation">,</span> <span
+        class="token string">'RUserPyGuide'</span><span class="token punctuation">,</span> <span
+        class="token string">'addToWebsite.sql'</span><span class="token punctuation">]</span>
+
+      Use glob module to look <span class="token keyword">for</span> files that <span class="token keyword">match</span>
+      a certain pattern
+      <span class="token punctuation">[</span><span class="token string">'./TextAndPy.ipynb'</span><span
+        class="token punctuation">,</span> <span class="token string">'./R.ipynb'</span><span
+        class="token punctuation">]</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<p>
+  You may also use system commands (Windows, Linux, Mac, etc.). I often use environment variables to store, say, a
+  folder I commonly access for my job:
+</p>
+
+<div class="code-toolbar">
+  <pre class="language-python" tabindex="0"><code class="language-python">os<span
+        class="token punctuation">.</span>getenv<span class="token punctuation">(</span><span
+        class="token string">"HOME"</span><span class="token punctuation">)</span>
+      <span class="token string">'/home/jondowns'</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+<h3>R</h3>
+<p>In R, the syntax is remarkably similar:</p>
+
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Note that, if you do not
+        assign an object, it is printed (not saved)</span>
+      getwd<span class="token punctuation">(</span><span class="token punctuation">)</span>
+      list.files<span class="token punctuation">(</span><span class="token string">"."</span><span
+        class="token punctuation">)</span> <span class="token comment"># List files in working directory</span>
+      list.files<span class="token punctuation">(</span><span class="token string">".."</span><span
+        class="token punctuation">)</span> <span class="token comment"># List files in parent of working
+        directory</span>
+
+      <span class="token comment"># Look for specific files</span>
+      list.files<span class="token punctuation">(</span><span class="token string">"."</span><span
+        class="token punctuation">,</span> pattern <span class="token operator">=</span> <span
+        class="token string">"*.ipynb"</span><span class="token punctuation">)</span> <span class="token comment"># Use
+        regex to search</span>
+
+      <span class="token comment"># Access environment variables</span>
+      Sys.getenv<span class="token punctuation">(</span><span class="token string">"HOME"</span><span
+        class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+<h2>Work with Databases</h2>
+<p>
+  Assuming Pandas is being used for your Python work, database connections are eerily similar between the two languages.
+  An important note: below, I connect to the database by writing most of the connection string directly into the code.
+  You should not do that! It exposes your server address, user name, and password to others who are reading your code.
+  I've stripped out the most sensitive parts. Environment variables, forcing the user to enter credentials, and other
+  practices are much safer ways to handle connection strings.
+</p>
+
+<h3>Python</h3>
+
+<div class="code-toolbar">
+  <pre class="language-python" tabindex="0"><code class="language-python"><span class="token comment"># Create
+        connection string, connect to server</span>
+      connection_string <span class="token operator">=</span> <span
+        class="token string">"mssql+pyodbc://readAdvWorks:Plznohackme!123"</span>
+      <span class="token string">"@[REDACTED]/adventureworks?"</span>\
+      <span class="token string">"driver=ODBC+Driver+18+for+SQL+Server"</span>
+      cnxn <span class="token operator">=</span> sa<span class="token punctuation">.</span>create_engine<span
+        class="token punctuation">(</span>connection_string<span class="token punctuation">)</span>
+
+      <span class="token comment"># Use the SQL information schema to check out what data are available</span>
+      pd<span class="token punctuation">.</span>read_sql<span class="token punctuation">(</span>
+      <span class="token triple-quoted-string string">"""
+        SELECT TOP 5 *
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME = 'Customer' """</span><span class="token punctuation">,</span> cnxn<span
+        class="token punctuation">)</span>
+    </code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>TABLE_CATALOG</th>
+      <th>TABLE_SCHEMA</th>
+      <th>TABLE_NAME</th>
+      <th>COLUMN_NAME</th>
+      <th>ORDINAL_POSITION</th>
+      <th>COLUMN_DEFAULT</th>
+      <th>IS_NULLABLE</th>
+      <th>DATA_TYPE</th>
+      <th>CHARACTER_MAXIMUM_LENGTH</th>
+      <th>CHARACTER_OCTET_LENGTH</th>
+      <th>...</th>
+      <th>DATETIME_PRECISION</th>
+      <th>CHARACTER_SET_CATALOG</th>
+      <th>CHARACTER_SET_SCHEMA</th>
+      <th>CHARACTER_SET_NAME</th>
+      <th>COLLATION_CATALOG</th>
+      <th>COLLATION_SCHEMA</th>
+      <th>COLLATION_NAME</th>
+      <th>DOMAIN_CATALOG</th>
+      <th>DOMAIN_SCHEMA</th>
+      <th>DOMAIN_NAME</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>adventureworks</td>
+      <td>SalesLT</td>
+      <td>Customer</td>
+      <td>CustomerID</td>
+      <td>1</td>
+      <td>None</td>
+      <td>NO</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>...</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>adventureworks</td>
+      <td>SalesLT</td>
+      <td>Customer</td>
+      <td>NameStyle</td>
+      <td>2</td>
+      <td>None</td>
+      <td>NO</td>
+      <td>bit</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>...</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>adventureworks</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>adventureworks</td>
+      <td>SalesLT</td>
+      <td>Customer</td>
+      <td>Title</td>
+      <td>3</td>
+      <td>None</td>
+      <td>YES</td>
+      <td>nvarchar</td>
+      <td>8.0</td>
+      <td>16.0</td>
+      <td>...</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>UNICODE</td>
+      <td>None</td>
+      <td>None</td>
+      <td>SQL_Latin1_General_CP1_CI_AS</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>adventureworks</td>
+      <td>SalesLT</td>
+      <td>Customer</td>
+      <td>FirstName</td>
+      <td>4</td>
+      <td>None</td>
+      <td>NO</td>
+      <td>nvarchar</td>
+      <td>50.0</td>
+      <td>100.0</td>
+      <td>...</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>UNICODE</td>
+      <td>None</td>
+      <td>None</td>
+      <td>SQL_Latin1_General_CP1_CI_AS</td>
+      <td>adventureworks</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>adventureworks</td>
+      <td>SalesLT</td>
+      <td>Customer</td>
+      <td>MiddleName</td>
+      <td>5</td>
+      <td>None</td>
+      <td>YES</td>
+      <td>nvarchar</td>
+      <td>50.0</td>
+      <td>100.0</td>
+      <td>...</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>UNICODE</td>
+      <td>None</td>
+      <td>None</td>
+      <td>SQL_Latin1_General_CP1_CI_AS</td>
+      <td>adventureworks</td>
+      <td>None</td>
+      <td>None</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 23 columns</p>
+
+<div class="code-toolbar">
+  <pre class="language-python" tabindex="0"><code class="language-python"><span class="token comment"># Use our
+        connection to query two tables from the database</span>
+      cust <span class="token operator">=</span> pd<span class="token punctuation">.</span>read_sql<span
+        class="token punctuation">(</span>
+      <span class="token triple-quoted-string string">"""
+        SELECT a.CustomerID
+        , a.AddressType
+        , b.AddressLine1
+        , b.AddressLine2
+        , b.City
+        , b.StateProvince
+        , b.CountryRegion
+        , b.PostalCode
+        , b.ModifiedDate
+        FROM SalesLt.CustomerAddress AS a
+        LEFT JOIN SalesLT.Address AS b ON a.AddressID = b.AddressID
+        """</span><span class="token punctuation">,</span> cnxn<span class="token punctuation">)</span>
+    </code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<h3>R</h3>
+<p>
+  Again, the solutions are quite similar. In fact, it could be even more similar by writing the connection string as a
+  single string. I chose to use the built-in arguments because that's how I would typically approach the problem in R.
+</p>
+
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r">cnxn <span class="token operator">&lt;-</span> DBI<span
+        class="token operator">::</span>dbConnect<span class="token punctuation">(</span>
+      drv <span class="token operator">=</span> odbc<span class="token operator">::</span>odbc<span
+        class="token punctuation">(</span><span class="token punctuation">)</span><span
+        class="token punctuation">,</span>
+      Driver <span class="token operator">=</span> <span class="token string">"{ODBC Driver 18 for SQL
+        Server}"</span><span class="token punctuation">,</span>
+      server <span class="token operator">=</span> <span class="token string">"[REDACTED]"</span><span
+        class="token punctuation">,</span>
+      database <span class="token operator">=</span> <span class="token string">"adventureworks"</span><span
+        class="token punctuation">,</span>
+      uid <span class="token operator">=</span> <span class="token string">"readAdvWorks"</span>
+      pwd <span class="token operator">=</span> <span class="token string">"Plznohackme!123"</span><span
+        class="token punctuation">)</span> <span class="token comment"># Reminder: do not do this</span>
+
+      <span class="token comment"># In addition to the SQL information schema tables, DBI has some convenience
+        functions</span>
+      dbListFields<span class="token punctuation">(</span>cnxn<span class="token punctuation">,</span> <span
+        class="token string">"Customer"</span><span class="token punctuation">)</span>
+    </code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+<p>
+  And, of course, let's run the same two queries as before. The main differnece between Python and R here is that Python
+  lists the connection as the SECOND argument, and R lists it as the first. Radical, I know.
+</p>
+
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Query database</span>
+      cust <span class="token operator">&lt;-</span> DBI<span class="token operator">::</span>dbGetQuery<span
+        class="token punctuation">(</span>cnxn<span class="token punctuation">,</span> <span
+        class="token string">"SELECT * FROM SalesLt.Customer"</span><span class="token punctuation">)</span>
+      custAdd <span class="token operator">&lt;-</span> DBI<span class="token operator">::</span>dbGetQuery<span
+        class="token punctuation">(</span>
+      cnxn<span class="token punctuation">,</span>
+      "SELECT a.CustomerID
+      <span class="token punctuation">,</span> a.AddressType
+      <span class="token punctuation">,</span> b.AddressLine1
+      <span class="token punctuation">,</span> b.AddressLine2
+      <span class="token punctuation">,</span> b.City
+      <span class="token punctuation">,</span> b.StateProvince
+      <span class="token punctuation">,</span> b.CountryRegion
+      <span class="token punctuation">,</span> b.PostalCode
+      <span class="token punctuation">,</span> b.ModifiedDate
+      FROM SalesLt.CustomerAddress AS a
+      LEFT JOIN SalesLT.Address AS b ON a.AddressID <span class="token operator">=</span> b.AddressID"<span
+        class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+<h2>Initial Data Exploration</h2>
+<p>
+  Now that data have been pulled in, we may want to explore it some. Check the number of rows, number of columns, see
+  whether a column is a string or number, etc. Let's go through some examples.
+</p>
+
+<h3>Python</h3>
+
+<p>
+  DataFrames are two-dimensional objects: they have rows (indexes) and columns. Think spreadsheet. Below, you'll see
+  printout of the columns in our dataframe and the list of indices for each row. The row indices are expressed as a
+  range of values (range function). dtype can be used to check the type of a column. Note that anything that has
+  strings/characters in them will be given the &quot;object&quot; type.
+</p>
+
+<div class="code-toolbar">
+  <pre class="language-python" tabindex="0"><code class="language-python"><span class="token comment"># Print out row
+        and column names</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Number
+        of rows and columns"</span><span class="token punctuation">)</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span>cust<span
+        class="token punctuation">.</span>shape<span class="token punctuation">)</span>
+
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span
+        class="token string">"Columns: "</span><span class="token punctuation">)</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span>cust<span
+        class="token punctuation">.</span>columns<span class="token punctuation">)</span>
+
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span
+        class="token string">"Indices:"</span><span class="token punctuation">)</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span>cust<span
+        class="token punctuation">.</span>index<span class="token punctuation">)</span>
+
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"\nData
+        type of Customer ID:"</span><span class="token punctuation">)</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span>cust<span
+        class="token punctuation">[</span><span class="token string">"CustomerID"</span><span
+        class="token punctuation">]</span><span class="token punctuation">.</span>dtype<span
+        class="token punctuation">)</span>
+
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"\nData
+        type of Last Name:"</span><span class="token punctuation">)</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span>cust<span
+        class="token punctuation">[</span><span class="token string">"LastName"</span><span
+        class="token punctuation">]</span><span class="token punctuation">.</span>dtype<span
+        class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+<div class="code-toolbar">
+  <pre class="language-bash" tabindex="0"><code class="language-bash">Number of rows and columns
+      <span class="token punctuation">(</span><span class="token number">847</span>, <span
+        class="token number">15</span><span class="token punctuation">)</span>
+      Columns:
+      Index<span class="token punctuation">(</span><span class="token punctuation">[</span>‘CustomerID’, ‘NameStyle’,
+      ‘Title’, ‘FirstName’,
+      ‘MiddleName’,
+      ‘LastName’, ‘Suffix’, ‘CompanyName’, ‘SalesPerson’,
+      ‘EmailAddress’,
+      ‘Phone’, ‘PasswordHash’, ‘PasswordSalt’, ‘rowguid’,
+      ‘ModifiedDate’<span class="token punctuation">]</span>,
+      <span class="token assign-left variable">dtype</span><span class="token operator">=</span>object<span
+        class="token punctuation">)</span>
+      Indices:
+      RangeIndex<span class="token punctuation">(</span>start<span class="token operator">=</span><span
+        class="token number">0</span>, <span class="token assign-left variable">stop</span><span
+        class="token operator">=</span><span class="token number">847</span>, <span
+        class="token assign-left variable">step</span><span class="token operator">=</span><span
+        class="token number">1</span><span class="token punctuation">)</span>
+
+      Data <span class="token builtin class-name">type</span> of Customer ID:
+      int64
+
+      Data <span class="token builtin class-name">type</span> of Last Name:
+      object</code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+<p>
+  And, a frequency table can for a column can be produced using value_counts(). This is often useful for cateogrical
+  variables (say, an 'Age Group' category with 5 levels).
+</p>
+
+
+<div class="code-toolbar">
+  <pre class="language-python" tabindex="0"><code class="language-python">cust<span
+        class="token punctuation">[</span><span class="token string">"SalesPerson"</span><span
+        class="token punctuation">]</span><span class="token punctuation">.</span>value_counts<span
+        class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<div class="code-toolbar">
+  <pre class="language-bash" tabindex="0"><code class="language-bash">adventure-works<span
+        class="token punctuation">\</span>shu0 <span class="token number">151</span>
+      adventure-works<span class="token punctuation">\</span>jillian0 <span class="token number">148</span>
+      adventure-works<span class="token punctuation">\</span>josé1 <span class="token number">142</span>
+      adventure-works<span class="token punctuation">\</span>garrett1 <span class="token number">78</span>
+      adventure-works<span class="token punctuation">\</span>jae0 <span class="token number">78</span>
+      adventure-works<span class="token punctuation">\</span>pamela0 <span class="token number">74</span>
+      adventure-works<span class="token punctuation">\</span>david8 <span class="token number">73</span>
+      adventure-works<span class="token punctuation">\</span>linda3 <span class="token number">71</span>
+      adventure-works<span class="token punctuation">\</span>michael9 <span class="token number">32</span>
+      Name: SalesPerson, dtype: int64</code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<div class="code-toolbar">
+  <pre class="language-python" tabindex="0"><code class="language-python"><span class="token comment"># Use dim, nrow,
+        and ncol to get rows/columns, and both</span>
+      dim<span class="token punctuation">(</span>cust<span class="token punctuation">)</span> <span
+        class="token comment"># Rows x columns</span>
+
+      <span class="token comment"># Print out row and column names</span>
+      colnames<span class="token punctuation">(</span>cust<span class="token punctuation">)</span> <span
+        class="token comment"># Most common</span>
+      rownames<span class="token punctuation">(</span>cust<span class="token punctuation">)</span><span
+        class="token punctuation">[</span><span class="token number">1</span><span
+        class="token punctuation">:</span><span class="token number">5</span><span class="token punctuation">]</span>
+      <span class="token comment"># Less common</span>
+
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Data
+        type of Customer ID:"</span><span class="token punctuation">)</span>
+      <span class="token keyword">class</span><span class="token punctuation">(</span>cust$CustomerID<span
+        class="token punctuation">)</span>
+
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Data
+        type of Last Name:"</span><span class="token punctuation">)</span>
+      <span class="token keyword">class</span><span class="token punctuation">(</span>cust$LastName<span
+        class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+
+<div class="code-toolbar">
+  <pre class="language-bash" tabindex="0"><code class="language-bash"><span class="token punctuation">[</span><span
+        class="token number">1</span><span class="token punctuation">]</span> <span class="token number">847</span>
+      <span class="token number">15</span>
+      ‘CustomerID’ ‘NameStyle’ ‘Title’ ‘FirstName’
+      ‘MiddleName’ ‘LastName’ ‘Suffix’ ‘CompanyName’
+      ‘SalesPerson’ ‘EmailAddress’ ‘Phone’ ‘PasswordHash’
+      ‘PasswordSalt’ ‘rowguid’ ‘ModifiedDate’
+      ‘1’ ‘2’ ‘3’ ‘4’ ‘5’
+
+      <span class="token punctuation">[</span><span class="token number">1</span><span
+        class="token punctuation">]</span> <span class="token string">"Data type of Customer ID:"</span>
+      ‘integer’
+      <span class="token punctuation">[</span><span class="token number">1</span><span
+        class="token punctuation">]</span> <span class="token string">"Data type of Last Name:"</span>
+      <span class="token string">'character'</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+<h2>Conclusion</h2>
+
+<p>
+  R and Python are not so different after all when it comes to data science.
+  My advice is to focus on developing the advanced skills in whatever language they are most comfortable with.
+  After those advanced skills are in your repertoire, converting them to a new language is just a matter of learning the
+  new syntax.
+  Tune in later for more comparisons of R vs. Python, and just keep coding.
+</p>
