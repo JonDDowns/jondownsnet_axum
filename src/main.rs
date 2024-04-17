@@ -1,24 +1,24 @@
-use askama::Template;
+pub mod config;
+pub mod posts;
+use crate::config::*;
+use crate::posts::*;
+
 use axum::{
-    extract::{Host, Path, State},
+    extract::Host,
     handler::HandlerWithoutStateExt,
     http::{StatusCode, Uri},
-    response::{Html, IntoResponse, Redirect, Response},
+    response::{IntoResponse, Redirect},
     routing::get,
     BoxError, Router,
 };
 use axum_server::tls_rustls::RustlsConfig;
-use serde::{Deserialize, Serialize};
-use serde_yaml;
 use sqlx::postgres::PgPoolOptions;
-use sqlx::types::time::Date;
-use sqlx::FromRow;
+use std::env;
 use std::sync::Arc;
+use std::time::Duration;
 use std::{net::SocketAddr, path::PathBuf};
 use tower_http::services::ServeDir;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
-use std::time::Duration;
 
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
@@ -27,20 +27,10 @@ struct Ports {
     https: u16,
 }
 
-#[derive(FromRow, Debug, Clone)]
-pub struct Post {
-    pub post_id: i32,
-    pub post_title: String,
-    pub post_date: Date,
-    pub post_body: String,
-    pub post_summary: String,
-    pub post_thumbnail: String,
-    pub post_thumbnail_alt: String,
-}
-
 #[tokio::main]
 async fn main() {
-    let cfg: Config = read_cfg();
+    let mystr: String = env::args().nth(1).expect("No config file path given");
+    let cfg: Config = read_cfg(&mystr);
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -61,9 +51,6 @@ async fn main() {
     )
     .await
     .unwrap();
-
-    println!("{}", cfg.pem_dir);
-    println!("{:?}", tlscfg);
 
     let db_connection_str = std::env::var("DATABASE_URL").unwrap_or_else(|_| cfg.cnxn_str);
 
@@ -110,111 +97,11 @@ async fn main() {
         .unwrap();
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Config {
-    username: String,
-    password: String,
-    cnxn_str: String,
-    pem_dir: String,
-    port_http: u16,
-    port_https: u16,
-    max_connections: u32,
-}
-
-fn read_cfg() -> Config {
-    let f = std::fs::File::open("../config_dev.yaml").expect("lul");
-    let d: Config = serde_yaml::from_reader(f).expect("Something happened");
-    d
-}
-
-struct HtmlTemplate<T>(T);
-
-impl<T> IntoResponse for HtmlTemplate<T>
-where
-    T: Template,
-{
-    fn into_response(self) -> Response {
-        match self.0.render() {
-            Ok(html) => Html(html).into_response(),
-            Err(err) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Fialed to render template. Error: {err}"),
-            )
-                .into_response(),
-        }
-    }
-}
-
-async fn post(
-    Path(post_id): Path<String>,
-    State(state): State<Arc<Vec<Post>>>,
-) -> impl IntoResponse {
-    let mut template = PostTemplate {
-        post_title: "none",
-        post_date: "none".to_string(),
-        post_body: "none",
-        post_thumbnail: "none",
-        post_thumbnail_alt: "none",
-    };
-    // if the user's query matches a post title then render a template
-    for i in 0..state.len() {
-        if post_id == state[i].post_id.to_string() {
-            template = PostTemplate {
-                post_title: &state[i].post_title,
-                post_date: state[i].post_date.to_string(),
-                post_body: &state[i].post_body,
-                post_thumbnail: &state[i].post_thumbnail,
-                post_thumbnail_alt: &state[i].post_thumbnail_alt,
-            };
-            break;
-        }
-    }
-
-    if &template.post_title == &"none" {
-        return (
-            StatusCode::NOT_FOUND,
-            "404: The resource you have requested could not be found.",
-        )
-            .into_response();
-    }
-
-    match template.render() {
-        Ok(html) => Html(html).into_response(),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "try again later").into_response(),
-    }
-}
-
-#[derive(Template)]
-#[template(path = "blogtempl.html", escape = "none")]
-struct PostTemplate<'a> {
-    post_title: &'a str,
-    post_date: String,
-    post_body: &'a str,
-    post_thumbnail: &'a str,
-    post_thumbnail_alt: &'a str,
-}
-
 async fn handler_404() -> impl IntoResponse {
     (
         StatusCode::NOT_FOUND,
         "404: The resource you have requested could not be found.",
     )
-}
-
-async fn index(State(state): State<Arc<Vec<Post>>>) -> impl IntoResponse {
-    let template: IndexTemplate = IndexTemplate {
-        posts: &state.to_vec(),
-    };
-    match template.render() {
-        Ok(html) => Html(html).into_response(),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "try again later").into_response(),
-    }
-}
-
-#[derive(Template)]
-#[template(path = "index.html", escape = "none")]
-struct IndexTemplate<'a> {
-    posts: &'a Vec<Post>,
 }
 
 #[allow(dead_code)]
