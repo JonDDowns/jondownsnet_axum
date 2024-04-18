@@ -78,7 +78,7 @@ async fn main() {
 
     let cc = ServiceBuilder::new().layer(SetResponseHeaderLayer::appending(
         header::CACHE_CONTROL,
-        HeaderValue::from_static("max-age=604800"),
+        HeaderValue::from_static("max-age=31536000"),
     ));
 
     // build our application with some routes
