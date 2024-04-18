@@ -4,6 +4,8 @@ pub mod routing;
 use crate::config::*;
 use crate::posts::*;
 use crate::routing::*;
+use axum::http::header;
+use axum::http::HeaderValue;
 use axum::{routing::get, Router};
 use axum_server::tls_rustls::RustlsConfig;
 use sqlx::postgres::PgPoolOptions;
@@ -11,8 +13,9 @@ use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 use std::{net::SocketAddr, path::PathBuf};
-use tower_http::compression::CompressionLayer;
+use tower::ServiceBuilder;
 use tower_http::services::ServeDir;
+use tower_http::{compression::CompressionLayer, set_header::SetResponseHeaderLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -73,14 +76,20 @@ async fn main() {
         .gzip(true)
         .zstd(true);
 
+    let cc = ServiceBuilder::new().layer(SetResponseHeaderLayer::appending(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("max-age=604800"),
+    ));
+
     // build our application with some routes
     let app = Router::new()
         .route("/", get(index))
         .route("/posts/:post_id", get(post))
         .nest_service("/assets", ServeDir::new("assets"))
         .nest_service("/.well-known/", ServeDir::new(".well-known"))
-        .with_state(shared_state);
-    let app = app.layer(compression_layer);
+        .with_state(shared_state)
+        .layer(cc)
+        .layer(compression_layer);
     let app = app.fallback(handler_404);
 
     // run it with hyper
