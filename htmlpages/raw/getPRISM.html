@@ -30,41 +30,64 @@
   session set up properly:
 </p>
 
-<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Load libraries</span>
-library<span class="token punctuation">(</span>jsonlite<span class="token punctuation">)</span>
-library<span class="token punctuation">(</span>rvest<span class="token punctuation">)</span>
-library<span class="token punctuation">(</span>raster<span class="token punctuation">)</span>
-library<span class="token punctuation">(</span>rgdal<span class="token punctuation">)</span>
-library<span class="token punctuation">(</span>sp<span class="token punctuation">)</span>
-library<span class="token punctuation">(</span>tidyverse<span class="token punctuation">)</span>
-library<span class="token punctuation">(</span>parallel<span class="token punctuation">)</span>
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Load libraries</span>
+      library<span class="token punctuation">(</span>jsonlite<span class="token punctuation">)</span>
+      library<span class="token punctuation">(</span>rvest<span class="token punctuation">)</span>
+      library<span class="token punctuation">(</span>raster<span class="token punctuation">)</span>
+      library<span class="token punctuation">(</span>rgdal<span class="token punctuation">)</span>
+      library<span class="token punctuation">(</span>sp<span class="token punctuation">)</span>
+      library<span class="token punctuation">(</span>tidyverse<span class="token punctuation">)</span>
+      library<span class="token punctuation">(</span>parallel<span class="token punctuation">)</span>
 
-<span class="token comment"># Set year</span>
-year <span class="token operator">&lt;-</span> <span class="token number">2011</span>
+      <span class="token comment"># Set year</span>
+      year <span class="token operator">&lt;-</span> <span class="token number">2011</span>
 
-<span class="token comment"># Set up parallel runs (save 2 cores)</span>
-nc <span class="token operator">&lt;-</span> detectCores<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token number">2</span>
-cl <span class="token operator">&lt;-</span> makeCluster<span class="token punctuation">(</span>nc<span class="token punctuation">)</span>
+      <span class="token comment"># Set up parallel runs (save 2 cores)</span>
+      nc <span class="token operator">&lt;-</span> detectCores<span class="token punctuation">(</span><span
+        class="token punctuation">)</span> <span class="token operator">-</span> <span class="token number">2</span>
+      cl <span class="token operator">&lt;-</span> makeCluster<span class="token punctuation">(</span>nc<span
+        class="token punctuation">)</span>
 
-<span class="token comment"># Load configuration settings (using hidden environmental variable)</span>
-<span class="token comment"># TO USE: make a .JSON file a variable called dirPRISM where all this data</span>
-<span class="token comment"># will be stored</span>
-cfig_file <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>Sys.getenv<span class="token punctuation">(</span><span class="token string">'myrconfig'</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'extractPRISM.json'</span><span class="token punctuation">)</span>
-config <span class="token operator">&lt;-</span> jsonlite<span class="token operator">::</span>read_json<span class="token punctuation">(</span>cfig_file<span class="token punctuation">)</span>
+      <span class="token comment"># Load configuration settings (using hidden environmental variable)</span>
+      <span class="token comment"># TO USE: make a .JSON file a variable called dirPRISM where all this data</span>
+      <span class="token comment"># will be stored</span>
+      cfig_file <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>Sys.getenv<span
+        class="token punctuation">(</span><span class="token string">'myrconfig'</span><span
+        class="token punctuation">)</span><span class="token punctuation">,</span> <span
+        class="token string">'extractPRISM.json'</span><span class="token punctuation">)</span>
+      config <span class="token operator">&lt;-</span> jsonlite<span class="token operator">::</span>read_json<span
+        class="token punctuation">(</span>cfig_file<span class="token punctuation">)</span>
 
-<span class="token comment"># Path to where all BIL files will download (make if necessary)</span>
-bil_dir <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>config<span class="token operator">$</span>dirPRISM<span class="token punctuation">,</span> <span class="token string">'TMAX/BIL/'</span><span class="token punctuation">)</span>
-dir.create<span class="token punctuation">(</span>bil_dir<span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span>
+      <span class="token comment"># Path to where all BIL files will download (make if necessary)</span>
+      bil_dir <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>config<span
+        class="token operator">$</span>dirPRISM<span class="token punctuation">,</span> <span
+        class="token string">'TMAX/BIL/'</span><span class="token punctuation">)</span>
+      dir.create<span class="token punctuation">(</span>bil_dir<span class="token punctuation">,</span> recursive <span
+        class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span>
 
-<span class="token comment"># Create a download directory for year TMAX data (make if necessary)</span>
-download_dir <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>bil_dir<span class="token punctuation">,</span> year<span class="token punctuation">,</span> <span class="token string">'/'</span><span class="token punctuation">)</span>
-dir.create<span class="token punctuation">(</span>download_dir<span class="token punctuation">)</span>
+      <span class="token comment"># Create a download directory for year TMAX data (make if necessary)</span>
+      download_dir <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>bil_dir<span
+        class="token punctuation">,</span> year<span class="token punctuation">,</span> <span
+        class="token string">'/'</span><span class="token punctuation">)</span>
+      dir.create<span class="token punctuation">(</span>download_dir<span class="token punctuation">)</span>
 
-<span class="token comment"># Where our final CSV files will go</span>
-csv_dir <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>config<span class="token operator">$</span>dirPRISM<span class="token punctuation">,</span> <span class="token string">'TMAX/CSV/'</span><span class="token punctuation">,</span> year<span class="token punctuation">,</span> <span class="token string">'/'</span><span class="token punctuation">)</span>
-dir.create<span class="token punctuation">(</span>csv_dir<span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span>
+      <span class="token comment"># Where our final CSV files will go</span>
+      csv_dir <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>config<span
+        class="token operator">$</span>dirPRISM<span class="token punctuation">,</span> <span
+        class="token string">'TMAX/CSV/'</span><span class="token punctuation">,</span> year<span
+        class="token punctuation">,</span> <span class="token string">'/'</span><span class="token punctuation">)</span>
+      dir.create<span class="token punctuation">(</span>csv_dir<span class="token punctuation">,</span> recursive <span
+        class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span>
 
-tract10_fn <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>config<span class="token operator">$</span>tract10dir<span class="token punctuation">,</span> <span class="token string">"tract10.shp"</span><span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+      tract10_fn <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>config<span
+        class="token operator">$</span>tract10dir<span class="token punctuation">,</span> <span
+        class="token string">"tract10.shp"</span><span class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
 
 <p>
@@ -79,10 +102,18 @@ tract10_fn <span class="token operator">&lt;-</span> paste0<span class="token pu
   config files in an environmental variable, mostly for privacy reasons.
   My config file looks like this:</p>
 
-<div class="code-toolbar"><pre class="language-json" tabindex="0"><code class="language-json"><span class="token punctuation">{</span>
-    <span class="token property">"dirPRISM"</span><span class="token operator">:</span> <span class="token string">"C:/YOUR/FILE/PATH/HERE/"</span><span class="token punctuation">,</span>
-    <span class="token property">"tract10dir"</span><span class="token operator">:</span> <span class="token string">"Z:/NONE/OF/YOUR/BUSINESS/"</span>
-<span class="token punctuation">}</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+<div class="code-toolbar">
+  <pre class="language-json" tabindex="0"><code class="language-json"><span class="token punctuation">{</span>
+      <span class="token property">"dirPRISM"</span><span class="token operator">:</span> <span
+        class="token string">"C:/YOUR/FILE/PATH/HERE/"</span><span class="token punctuation">,</span>
+      <span class="token property">"tract10dir"</span><span class="token operator">:</span> <span
+        class="token string">"Z:/NONE/OF/YOUR/BUSINESS/"</span>
+      <span class="token punctuation">}</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
 
 <p>
@@ -109,31 +140,75 @@ tract10_fn <span class="token operator">&lt;-</span> paste0<span class="token pu
   have missed on the second run. The code:
 </p>
 
-<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># DOWNLOAD FILES ----------------------------------------------------------</span>
-<span class="token comment"># List all of the PRISM files on an FTP site</span>
-listPRISMFiles <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>var<span class="token punctuation">,</span> year<span class="token punctuation">)</span><span class="token punctuation">{</span>
-  var <span class="token operator">&lt;-</span> tolower<span class="token punctuation">(</span>var<span class="token punctuation">)</span>
-  lnk <span class="token operator">&lt;-</span> glue<span class="token operator">::</span>glue<span class="token punctuation">(</span><span class="token string">"https://ftp.prism.oregonstate.edu/daily/{var}/{year}"</span><span class="token punctuation">)</span>
-  ftp_txt <span class="token operator">&lt;-</span> read_html<span class="token punctuation">(</span>lnk<span class="token punctuation">)</span>
-  ftp_files <span class="token operator">&lt;-</span> html_attr<span class="token punctuation">(</span>html_nodes<span class="token punctuation">(</span>ftp_txt<span class="token punctuation">,</span> <span class="token string">'a'</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'href'</span><span class="token punctuation">)</span>
-  ftp_files <span class="token operator">&lt;-</span> ftp_files<span class="token punctuation">[</span>grepl<span class="token punctuation">(</span><span class="token string">'PRISM'</span><span class="token punctuation">,</span> ftp_files<span class="token punctuation">)</span><span class="token punctuation">]</span>
-  return<span class="token punctuation">(</span>list<span class="token punctuation">(</span>lnk <span class="token operator">=</span> lnk<span class="token punctuation">,</span> files <span class="token operator">=</span> ftp_files<span class="token punctuation">)</span><span class="token punctuation">)</span>
-<span class="token punctuation">}</span>
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># DOWNLOAD FILES
+        ----------------------------------------------------------</span>
+      <span class="token comment"># List all of the PRISM files on an FTP site</span>
+      listPRISMFiles <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span
+        class="token punctuation">(</span>var<span class="token punctuation">,</span> year<span
+        class="token punctuation">)</span><span class="token punctuation">{</span>
+      var <span class="token operator">&lt;-</span> tolower<span class="token punctuation">(</span>var<span
+        class="token punctuation">)</span>
+      lnk <span class="token operator">&lt;-</span> glue<span class="token operator">::</span>glue<span
+        class="token punctuation">(</span><span
+        class="token string">"https://ftp.prism.oregonstate.edu/daily/{var}/{year}"</span><span
+        class="token punctuation">)</span>
+      ftp_txt <span class="token operator">&lt;-</span> read_html<span class="token punctuation">(</span>lnk<span
+        class="token punctuation">)</span>
+      ftp_files <span class="token operator">&lt;-</span> html_attr<span
+        class="token punctuation">(</span>html_nodes<span class="token punctuation">(</span>ftp_txt<span
+        class="token punctuation">,</span> <span class="token string">'a'</span><span
+        class="token punctuation">)</span><span class="token punctuation">,</span> <span
+        class="token string">'href'</span><span class="token punctuation">)</span>
+      ftp_files <span class="token operator">&lt;-</span> ftp_files<span class="token punctuation">[</span>grepl<span
+        class="token punctuation">(</span><span class="token string">'PRISM'</span><span
+        class="token punctuation">,</span> ftp_files<span class="token punctuation">)</span><span
+        class="token punctuation">]</span>
+      return<span class="token punctuation">(</span>list<span class="token punctuation">(</span>lnk <span
+        class="token operator">=</span> lnk<span class="token punctuation">,</span> files <span
+        class="token operator">=</span> ftp_files<span class="token punctuation">)</span><span
+        class="token punctuation">)</span>
+      <span class="token punctuation">}</span>
 
-<span class="token comment"># Get TMAX files for year</span>
-files <span class="token operator">&lt;-</span> listPRISMFiles<span class="token punctuation">(</span>var <span class="token operator">=</span> <span class="token string">'tmax'</span><span class="token punctuation">,</span> year <span class="token operator">=</span> year<span class="token punctuation">)</span>
+      <span class="token comment"># Get TMAX files for year</span>
+      files <span class="token operator">&lt;-</span> listPRISMFiles<span class="token punctuation">(</span>var <span
+        class="token operator">=</span> <span class="token string">'tmax'</span><span class="token punctuation">,</span>
+      year <span class="token operator">=</span> year<span class="token punctuation">)</span>
 
-<span class="token comment"># Check for already downloaded files (we don't want to download twice)</span>
-already_downloaded <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">'.zip'</span><span class="token punctuation">)</span>
-files<span class="token operator">$</span>files <span class="token operator">&lt;-</span> files<span class="token operator">$</span>files<span class="token punctuation">[</span><span class="token operator">!</span><span class="token punctuation">(</span>files<span class="token operator">$</span>files <span class="token percent-operator operator">%in%</span> already_downloaded<span class="token punctuation">)</span><span class="token punctuation">]</span>
+      <span class="token comment"># Check for already downloaded files (we don't want to download twice)</span>
+      already_downloaded <span class="token operator">&lt;-</span> list.files<span
+        class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern <span
+        class="token operator">=</span> <span class="token string">'.zip'</span><span class="token punctuation">)</span>
+      files<span class="token operator">$</span>files <span class="token operator">&lt;-</span> files<span
+        class="token operator">$</span>files<span class="token punctuation">[</span><span
+        class="token operator">!</span><span class="token punctuation">(</span>files<span
+        class="token operator">$</span>files <span class="token percent-operator operator">%in%</span>
+      already_downloaded<span class="token punctuation">)</span><span class="token punctuation">]</span>
 
-<span class="token comment"># Download all of the files specified</span>
-dlPRISMDaily <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>baselnk<span class="token punctuation">,</span> file<span class="token punctuation">,</span> outdir<span class="token punctuation">)</span><span class="token punctuation">{</span>
-  fn <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>baselnk<span class="token punctuation">,</span> <span class="token string">'/'</span><span class="token punctuation">,</span> file<span class="token punctuation">)</span>
-  download.file<span class="token punctuation">(</span>fn<span class="token punctuation">,</span> destfile <span class="token operator">=</span> paste0<span class="token punctuation">(</span>outdir<span class="token punctuation">,</span> file<span class="token punctuation">)</span><span class="token punctuation">)</span>
-<span class="token punctuation">}</span>
-dlPRISMDaily<span class="token punctuation">(</span>baselnk <span class="token operator">=</span> files<span class="token operator">$</span>lnk<span class="token punctuation">,</span> file <span class="token operator">=</span> files<span class="token operator">$</span>files<span class="token punctuation">,</span> outdir <span class="token operator">=</span> download_dir<span class="token punctuation">)</span>
-</code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+      <span class="token comment"># Download all of the files specified</span>
+      dlPRISMDaily <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span
+        class="token punctuation">(</span>baselnk<span class="token punctuation">,</span> file<span
+        class="token punctuation">,</span> outdir<span class="token punctuation">)</span><span
+        class="token punctuation">{</span>
+      fn <span class="token operator">&lt;-</span> paste0<span class="token punctuation">(</span>baselnk<span
+        class="token punctuation">,</span> <span class="token string">'/'</span><span class="token punctuation">,</span>
+      file<span class="token punctuation">)</span>
+      download.file<span class="token punctuation">(</span>fn<span class="token punctuation">,</span> destfile <span
+        class="token operator">=</span> paste0<span class="token punctuation">(</span>outdir<span
+        class="token punctuation">,</span> file<span class="token punctuation">)</span><span
+        class="token punctuation">)</span>
+      <span class="token punctuation">}</span>
+      dlPRISMDaily<span class="token punctuation">(</span>baselnk <span class="token operator">=</span> files<span
+        class="token operator">$</span>lnk<span class="token punctuation">,</span> file <span
+        class="token operator">=</span> files<span class="token operator">$</span>files<span
+        class="token punctuation">,</span> outdir <span class="token operator">=</span> download_dir<span
+        class="token punctuation">)</span>
+    </code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
 
 <p>
@@ -163,18 +238,43 @@ dlPRISMDaily<span class="token punctuation">(</span>baselnk <span class="token o
 </p>
 
 
-<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># UNZIP FILES -------------------------------------------------------------</span>
-<span class="token comment"># Identify all of the .zip files in the directory we just created</span>
-unzip_fns <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">".zip"</span><span class="token punctuation">)</span>
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># UNZIP FILES
+        -------------------------------------------------------------</span>
+      <span class="token comment"># Identify all of the .zip files in the directory we just created</span>
+      unzip_fns <span class="token operator">&lt;-</span> list.files<span
+        class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern <span
+        class="token operator">=</span> <span class="token string">".zip"</span><span class="token punctuation">)</span>
 
-<span class="token comment"># Identify already-unzipped versions of these files, remove from list</span>
-already_unzipped <span class="token operator">&lt;-</span> basename<span class="token punctuation">(</span>list.dirs<span class="token punctuation">(</span>download_dir<span class="token punctuation">)</span><span class="token punctuation">)</span>
-unzip_fns <span class="token operator">&lt;-</span> unzip_fns<span class="token punctuation">[</span><span class="token operator">!</span><span class="token punctuation">(</span>gsub<span class="token punctuation">(</span><span class="token string">'.zip'</span><span class="token punctuation">,</span> <span class="token string">''</span><span class="token punctuation">,</span> unzip_fns<span class="token punctuation">)</span> <span class="token percent-operator operator">%in%</span> already_unzipped<span class="token punctuation">)</span><span class="token punctuation">]</span>
+      <span class="token comment"># Identify already-unzipped versions of these files, remove from list</span>
+      already_unzipped <span class="token operator">&lt;-</span> basename<span
+        class="token punctuation">(</span>list.dirs<span class="token punctuation">(</span>download_dir<span
+        class="token punctuation">)</span><span class="token punctuation">)</span>
+      unzip_fns <span class="token operator">&lt;-</span> unzip_fns<span class="token punctuation">[</span><span
+        class="token operator">!</span><span class="token punctuation">(</span>gsub<span
+        class="token punctuation">(</span><span class="token string">'.zip'</span><span
+        class="token punctuation">,</span> <span class="token string">''</span><span class="token punctuation">,</span>
+      unzip_fns<span class="token punctuation">)</span> <span class="token percent-operator operator">%in%</span>
+      already_unzipped<span class="token punctuation">)</span><span class="token punctuation">]</span>
 
-<span class="token comment"># Unzip the files that need it</span>
-lapply<span class="token punctuation">(</span>unzip_fns<span class="token punctuation">,</span> <span class="token keyword">function</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
-unzip<span class="token punctuation">(</span>paste0<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> x<span class="token punctuation">)</span><span class="token punctuation">,</span>
-exdir <span class="token operator">=</span> paste0<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> <span class="token string">'/'</span><span class="token punctuation">,</span> gsub<span class="token punctuation">(</span><span class="token string">".zip"</span><span class="token punctuation">,</span> <span class="token string">''</span><span class="token punctuation">,</span> x<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+      <span class="token comment"># Unzip the files that need it</span>
+      lapply<span class="token punctuation">(</span>unzip_fns<span class="token punctuation">,</span> <span
+        class="token keyword">function</span><span class="token punctuation">(</span>x<span
+        class="token punctuation">)</span>
+      unzip<span class="token punctuation">(</span>paste0<span class="token punctuation">(</span>download_dir<span
+        class="token punctuation">,</span> x<span class="token punctuation">)</span><span
+        class="token punctuation">,</span>
+      exdir <span class="token operator">=</span> paste0<span class="token punctuation">(</span>download_dir<span
+        class="token punctuation">,</span> <span class="token string">'/'</span><span class="token punctuation">,</span>
+      gsub<span class="token punctuation">(</span><span class="token string">".zip"</span><span
+        class="token punctuation">,</span> <span class="token string">''</span><span class="token punctuation">,</span>
+      x<span class="token punctuation">)</span><span class="token punctuation">)</span><span
+        class="token punctuation">)</span><span class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
 
 <h2>Explore the data!</h2>
@@ -182,12 +282,29 @@ exdir <span class="token operator">=</span> paste0<span class="token punctuation
   Okay, we have some data! Now, let&lsquo;s read it in and take a peek.
 </p>
 
-<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Identify the first .bil file</span>
-myBilFile <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">'.bil$'</span><span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
-myRast <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>raster<span class="token punctuation">(</span>paste0<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> myBilFile<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
-plot<span class="token punctuation">(</span>myRast<span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Identify the first .bil
+        file</span>
+      myBilFile <span class="token operator">&lt;-</span> list.files<span
+        class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern <span
+        class="token operator">=</span> <span class="token string">'.bil$'</span><span
+        class="token punctuation">,</span> recursive <span class="token operator">=</span> <span
+        class="token boolean">TRUE</span><span class="token punctuation">)</span><span
+        class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
+      myRast <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>raster<span
+        class="token punctuation">(</span>paste0<span class="token punctuation">(</span>download_dir<span
+        class="token punctuation">,</span> myBilFile<span class="token punctuation">)</span><span
+        class="token punctuation">[</span><span class="token punctuation">[</span><span
+        class="token number">1</span><span class="token punctuation">]</span><span
+        class="token punctuation">]</span><span class="token punctuation">)</span>
+      plot<span class="token punctuation">(</span>myRast<span class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
-<p><img src="../assets/images/prismTempsP1.png" alt=""></p>
+<p><img src="../assets/images/prismTempsP1.webp" alt="Heat map of Washington temperatures"></p>
 
 <p>
   Voila! A color-coded heat map of max US temperatures on 1/1/2011. As
@@ -205,30 +322,60 @@ plot<span class="token punctuation">(</span>myRast<span class="token punctuation
   requires them to be in the same projection:
 </p>
 
-<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Read in shapefile, convert to new CRS</span>
-waCensus10 <span class="token operator">&lt;-</span> readOGR<span class="token punctuation">(</span>tract10_fn<span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Read in shapefile, convert
+        to new CRS</span>
+      waCensus10 <span class="token operator">&lt;-</span> readOGR<span
+        class="token punctuation">(</span>tract10_fn<span class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
 
-<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r">shp_reproj <span class="token operator">&lt;-</span> sp<span class="token operator">::</span>spTransform<span class="token punctuation">(</span>waCensus10<span class="token punctuation">,</span> crs<span class="token punctuation">(</span>myRast<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r">shp_reproj <span class="token operator">&lt;-</span>
+      sp<span class="token operator">::</span>spTransform<span class="token punctuation">(</span>waCensus10<span
+        class="token punctuation">,</span> crs<span class="token punctuation">(</span>myRast<span
+        class="token punctuation">)</span><span class="token punctuation">)</span>
 
-<span class="token comment"># Plot raster and overlay shapefile</span>
-plot<span class="token punctuation">(</span>myRast<span class="token punctuation">)</span>
-plot<span class="token punctuation">(</span>shp_reproj<span class="token punctuation">,</span> bg <span class="token operator">=</span> <span class="token string">'transparent'</span><span class="token punctuation">,</span> add <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+      <span class="token comment"># Plot raster and overlay shapefile</span>
+      plot<span class="token punctuation">(</span>myRast<span class="token punctuation">)</span>
+      plot<span class="token punctuation">(</span>shp_reproj<span class="token punctuation">,</span> bg <span
+        class="token operator">=</span> <span class="token string">'transparent'</span><span
+        class="token punctuation">,</span> add <span class="token operator">=</span> <span
+        class="token boolean">TRUE</span><span class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
-<div class="code-toolbar"><pre class="language-bash" tabindex="0"><code class="language-bash"><span class="token comment">## Warning in OGRSpatialRef(dsn, layer, morphFromESRI = morphFromESRI, dumpSRS = dumpSRS, : Discarded datum</span>
-NAD83_High_Accuracy_Reference_Network
-<span class="token comment">## in Proj4 definition: +proj=lcc +lat_0=45.3333333333333 +lon_0=-120.5 +lat_1=45.8333333333333</span>
-+lat_2<span class="token operator">=</span><span class="token number">47.3333333333333</span> +x_0<span class="token operator">=</span><span class="token number">500000</span> +y_0<span class="token operator">=</span><span class="token number">0</span>
-<span class="token comment">## +ellps=GRS80 +units=us-ft +no_defs</span>
+<div class="code-toolbar">
+  <pre class="language-bash" tabindex="0"><code class="language-bash"><span class="token comment">## Warning in
+        OGRSpatialRef(dsn, layer, morphFromESRI = morphFromESRI, dumpSRS = dumpSRS, : Discarded datum</span>
+      NAD83_High_Accuracy_Reference_Network
+      <span class="token comment">## in Proj4 definition: +proj=lcc +lat_0=45.3333333333333 +lon_0=-120.5
+        +lat_1=45.8333333333333</span>
+      +lat_2<span class="token operator">=</span><span class="token number">47.3333333333333</span> +x_0<span
+        class="token operator">=</span><span class="token number">500000</span> +y_0<span
+        class="token operator">=</span><span class="token number">0</span>
+      <span class="token comment">## +ellps=GRS80 +units=us-ft +no_defs</span>
 
-<span class="token comment">## OGR data source with driver: ESRI Shapefile</span>
-<span class="token comment">## Source: "D:\PRISM\tract10\tract10.shp", layer: "tract10"</span>
-<span class="token comment">## with 1458 features</span>
-<span class="token comment">## It has 34 fields</span>
-<span class="token comment">## Integer64 fields read as strings: ALANDM AWATERM</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+      <span class="token comment">## OGR data source with driver: ESRI Shapefile</span>
+      <span class="token comment">## Source: "D:\PRISM\tract10\tract10.shp", layer: "tract10"</span>
+      <span class="token comment">## with 1458 features</span>
+      <span class="token comment">## It has 34 fields</span>
+      <span class="token comment">## Integer64 fields read as strings: ALANDM AWATERM</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
 
-<p><img src="../assets/images/prismTempsP2.png" alt=""></p>
+<p><img src="../assets/images/prismTempsP2.webp" alt="Heat map of Washington temperatures"></p>
 
 <p>
   The scale appears to be correct, but there is one problem: the area
@@ -238,14 +385,25 @@ NAD83_High_Accuracy_Reference_Network
   slice of the raster file.
 </p>
 
-<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Subset the raster image to speed things up</span>
-myRast2 <span class="token operator">&lt;-</span> crop<span class="token punctuation">(</span>myRast<span class="token punctuation">,</span> shp_reproj<span class="token punctuation">)</span>
-plot<span class="token punctuation">(</span>myRast2<span class="token punctuation">)</span>
-plot<span class="token punctuation">(</span>shp_reproj<span class="token punctuation">,</span> bg <span class="token operator">=</span> <span class="token string">'transparent'</span><span class="token punctuation">,</span> add <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span>
-</code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Subset the raster image to
+        speed things up</span>
+      myRast2 <span class="token operator">&lt;-</span> crop<span class="token punctuation">(</span>myRast<span
+        class="token punctuation">,</span> shp_reproj<span class="token punctuation">)</span>
+      plot<span class="token punctuation">(</span>myRast2<span class="token punctuation">)</span>
+      plot<span class="token punctuation">(</span>shp_reproj<span class="token punctuation">,</span> bg <span
+        class="token operator">=</span> <span class="token string">'transparent'</span><span
+        class="token punctuation">,</span> add <span class="token operator">=</span> <span
+        class="token boolean">TRUE</span><span class="token punctuation">)</span>
+    </code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
 
-<p><img src="../assets/images/prismTempsP3.png" alt=""></p>
+<p><img src="../assets/images/prismTempsP3.webp" alt="Graphed shapefile of Washington temperatures"></p>
 
 <h2>Extract the data</h2>
 
@@ -255,44 +413,87 @@ plot<span class="token punctuation">(</span>shp_reproj<span class="token punctua
   with 1/1/2011 in this example.
 </p>
 
-<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Get mean temp across each boundary</span>
-myExtract <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>extract<span class="token punctuation">(</span>myRast2<span class="token punctuation">,</span> shp_reproj<span class="token punctuation">,</span> fun <span class="token operator">=</span> mean<span class="token punctuation">)</span>
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Get mean temp across each
+        boundary</span>
+      myExtract <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>extract<span
+        class="token punctuation">(</span>myRast2<span class="token punctuation">,</span> shp_reproj<span
+        class="token punctuation">,</span> fun <span class="token operator">=</span> mean<span
+        class="token punctuation">)</span>
 
-<span class="token comment"># Put in dataframe format, add date and tract identifiers</span>
-myOutputData <span class="token operator">&lt;-</span> data.frame<span class="token punctuation">(</span><span class="token string">'GEOID10'</span> <span class="token operator">=</span> shp_reproj<span class="token operator">@</span>data<span class="token operator">$</span>GEOID10<span class="token punctuation">,</span>
-date <span class="token operator">=</span> as.Date<span class="token punctuation">(</span><span class="token string">'2011-01-01'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
-TMAX <span class="token operator">=</span> myExtract<span class="token punctuation">)</span>
+      <span class="token comment"># Put in dataframe format, add date and tract identifiers</span>
+      myOutputData <span class="token operator">&lt;-</span> data.frame<span class="token punctuation">(</span><span
+        class="token string">'GEOID10'</span> <span class="token operator">=</span> shp_reproj<span
+        class="token operator">@</span>data<span class="token operator">$</span>GEOID10<span
+        class="token punctuation">,</span>
+      date <span class="token operator">=</span> as.Date<span class="token punctuation">(</span><span
+        class="token string">'2011-01-01'</span><span class="token punctuation">)</span><span
+        class="token punctuation">,</span>
+      TMAX <span class="token operator">=</span> myExtract<span class="token punctuation">)</span>
 
-<span class="token comment"># Take a peek at the data</span>
-head<span class="token punctuation">(</span>myOutputData<span class="token punctuation">)</span>
-</code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+      <span class="token comment"># Take a peek at the data</span>
+      head<span class="token punctuation">(</span>myOutputData<span class="token punctuation">)</span>
+    </code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
 
-<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Convert raster to CSV ---------------------------------------------------</span>
-<span class="token comment"># Only do 10 files for demonstration purposes.</span>
-n_ras_to_csv <span class="token operator">&lt;-</span> <span class="token number">10</span>
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Convert raster to CSV
+        ---------------------------------------------------</span>
+      <span class="token comment"># Only do 10 files for demonstration purposes.</span>
+      n_ras_to_csv <span class="token operator">&lt;-</span> <span class="token number">10</span>
 
-<span class="token comment"># Identify all files ending with .bil (no zip)</span>
-prismBils <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>
-  download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">'.bil$'</span><span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span>
-<span class="token punctuation">)</span>
+      <span class="token comment"># Identify all files ending with .bil (no zip)</span>
+      prismBils <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>
+      download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span
+        class="token string">'.bil$'</span><span class="token punctuation">,</span> recursive <span
+        class="token operator">=</span> <span class="token boolean">TRUE</span>
+      <span class="token punctuation">)</span>
 
-outunzip_fns <span class="token operator">&lt;-</span> basename<span class="token punctuation">(</span>dirname<span class="token punctuation">(</span>prismBils<span class="token punctuation">)</span><span class="token punctuation">)</span>
-excludes <span class="token operator">&lt;-</span> which<span class="token punctuation">(</span>file.exists<span class="token punctuation">(</span>paste0<span class="token punctuation">(</span>csv_dir<span class="token punctuation">,</span> outunzip_fns<span class="token punctuation">,</span> <span class="token string">'.csv'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+      outunzip_fns <span class="token operator">&lt;-</span> basename<span
+        class="token punctuation">(</span>dirname<span class="token punctuation">(</span>prismBils<span
+        class="token punctuation">)</span><span class="token punctuation">)</span>
+      excludes <span class="token operator">&lt;-</span> which<span class="token punctuation">(</span>file.exists<span
+        class="token punctuation">(</span>paste0<span class="token punctuation">(</span>csv_dir<span
+        class="token punctuation">,</span> outunzip_fns<span class="token punctuation">,</span> <span
+        class="token string">'.csv'</span><span class="token punctuation">)</span><span
+        class="token punctuation">)</span><span class="token punctuation">)</span>
 
-<span class="token comment"># If CSVs already exist, we don't need to run this script on them again</span>
-<span class="token keyword">if</span><span class="token punctuation">(</span><span class="token operator">!</span>identical<span class="token punctuation">(</span>excludes<span class="token punctuation">,</span> integer<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
-  prismBils <span class="token operator">&lt;-</span> prismBils<span class="token punctuation">[</span><span class="token operator">-</span>excludes<span class="token punctuation">]</span>
-  outunzip_fns <span class="token operator">&lt;-</span> outunzip_fns<span class="token punctuation">[</span><span class="token operator">-</span>excludes<span class="token punctuation">]</span>
-<span class="token punctuation">}</span>
+      <span class="token comment"># If CSVs already exist, we don't need to run this script on them again</span>
+      <span class="token keyword">if</span><span class="token punctuation">(</span><span
+        class="token operator">!</span>identical<span class="token punctuation">(</span>excludes<span
+        class="token punctuation">,</span> integer<span class="token punctuation">(</span><span
+        class="token number">0</span><span class="token punctuation">)</span><span
+        class="token punctuation">)</span><span class="token punctuation">)</span><span
+        class="token punctuation">{</span>
+      prismBils <span class="token operator">&lt;-</span> prismBils<span class="token punctuation">[</span><span
+        class="token operator">-</span>excludes<span class="token punctuation">]</span>
+      outunzip_fns <span class="token operator">&lt;-</span> outunzip_fns<span class="token punctuation">[</span><span
+        class="token operator">-</span>excludes<span class="token punctuation">]</span>
+      <span class="token punctuation">}</span>
 
-<span class="token comment"># Date column to add to each entry</span>
-dates <span class="token operator">&lt;-</span> as.Date<span class="token punctuation">(</span>
-sub<span class="token punctuation">(</span><span class="token string">".*([0-9.]{8}).*"</span><span class="token punctuation">,</span> <span class="token string">"\\1"</span><span class="token punctuation">,</span> basename<span class="token punctuation">(</span>prismBils<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
-format <span class="token operator">=</span> <span class="token string">"%Y%m%d"</span><span class="token punctuation">)</span>
+      <span class="token comment"># Date column to add to each entry</span>
+      dates <span class="token operator">&lt;-</span> as.Date<span class="token punctuation">(</span>
+      sub<span class="token punctuation">(</span><span class="token string">".*([0-9.]{8}).*"</span><span
+        class="token punctuation">,</span> <span class="token string">"\\1"</span><span
+        class="token punctuation">,</span> basename<span class="token punctuation">(</span>prismBils<span
+        class="token punctuation">)</span><span class="token punctuation">)</span><span
+        class="token punctuation">,</span>
+      format <span class="token operator">=</span> <span class="token string">"%Y%m%d"</span><span
+        class="token punctuation">)</span>
 
-<span class="token comment"># Read in CT shapefile file and a single BIL. Reproject shapefile.</span>
-waCensus10 <span class="token operator">&lt;-</span> readOGR<span class="token punctuation">(</span>tract10_fn<span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+      <span class="token comment"># Read in CT shapefile file and a single BIL. Reproject shapefile.</span>
+      waCensus10 <span class="token operator">&lt;-</span> readOGR<span
+        class="token punctuation">(</span>tract10_fn<span class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
 
 <p>
@@ -309,109 +510,207 @@ waCensus10 <span class="token operator">&lt;-</span> readOGR<span class="token p
   script runs.
 </p>
 
-<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Convert raster to CSV ---------------------------------------------------</span>
-<span class="token comment"># Only do 10 files for demonstration purposes.</span>
-n_ras_to_csv <span class="token operator">&lt;-</span> <span class="token number">10</span>
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Convert raster to CSV
+        ---------------------------------------------------</span>
+      <span class="token comment"># Only do 10 files for demonstration purposes.</span>
+      n_ras_to_csv <span class="token operator">&lt;-</span> <span class="token number">10</span>
 
-<span class="token comment"># Identify all files ending with .bil (no zip)</span>
-prismBils <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>
-  download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">'.bil$'</span><span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span>
-<span class="token punctuation">)</span>
+      <span class="token comment"># Identify all files ending with .bil (no zip)</span>
+      prismBils <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>
+      download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span
+        class="token string">'.bil$'</span><span class="token punctuation">,</span> recursive <span
+        class="token operator">=</span> <span class="token boolean">TRUE</span>
+      <span class="token punctuation">)</span>
 
-outunzip_fns <span class="token operator">&lt;-</span> basename<span class="token punctuation">(</span>dirname<span class="token punctuation">(</span>prismBils<span class="token punctuation">)</span><span class="token punctuation">)</span>
-excludes <span class="token operator">&lt;-</span> which<span class="token punctuation">(</span>file.exists<span class="token punctuation">(</span>paste0<span class="token punctuation">(</span>csv_dir<span class="token punctuation">,</span> outunzip_fns<span class="token punctuation">,</span> <span class="token string">'.csv'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+      outunzip_fns <span class="token operator">&lt;-</span> basename<span
+        class="token punctuation">(</span>dirname<span class="token punctuation">(</span>prismBils<span
+        class="token punctuation">)</span><span class="token punctuation">)</span>
+      excludes <span class="token operator">&lt;-</span> which<span class="token punctuation">(</span>file.exists<span
+        class="token punctuation">(</span>paste0<span class="token punctuation">(</span>csv_dir<span
+        class="token punctuation">,</span> outunzip_fns<span class="token punctuation">,</span> <span
+        class="token string">'.csv'</span><span class="token punctuation">)</span><span
+        class="token punctuation">)</span><span class="token punctuation">)</span>
 
-<span class="token comment"># If CSVs already exist, we don't need to run this script on them again</span>
-<span class="token keyword">if</span><span class="token punctuation">(</span><span class="token operator">!</span>identical<span class="token punctuation">(</span>excludes<span class="token punctuation">,</span> integer<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
-  prismBils <span class="token operator">&lt;-</span> prismBils<span class="token punctuation">[</span><span class="token operator">-</span>excludes<span class="token punctuation">]</span>
-  outunzip_fns <span class="token operator">&lt;-</span> outunzip_fns<span class="token punctuation">[</span><span class="token operator">-</span>excludes<span class="token punctuation">]</span>
-<span class="token punctuation">}</span>
+      <span class="token comment"># If CSVs already exist, we don't need to run this script on them again</span>
+      <span class="token keyword">if</span><span class="token punctuation">(</span><span
+        class="token operator">!</span>identical<span class="token punctuation">(</span>excludes<span
+        class="token punctuation">,</span> integer<span class="token punctuation">(</span><span
+        class="token number">0</span><span class="token punctuation">)</span><span
+        class="token punctuation">)</span><span class="token punctuation">)</span><span
+        class="token punctuation">{</span>
+      prismBils <span class="token operator">&lt;-</span> prismBils<span class="token punctuation">[</span><span
+        class="token operator">-</span>excludes<span class="token punctuation">]</span>
+      outunzip_fns <span class="token operator">&lt;-</span> outunzip_fns<span class="token punctuation">[</span><span
+        class="token operator">-</span>excludes<span class="token punctuation">]</span>
+      <span class="token punctuation">}</span>
 
-<span class="token comment"># Date column to add to each entry</span>
-dates <span class="token operator">&lt;-</span> as.Date<span class="token punctuation">(</span>
-sub<span class="token punctuation">(</span><span class="token string">".*([0-9.]{8}).*"</span><span class="token punctuation">,</span> <span class="token string">"\\1"</span><span class="token punctuation">,</span> basename<span class="token punctuation">(</span>prismBils<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
-format <span class="token operator">=</span> <span class="token string">"%Y%m%d"</span><span class="token punctuation">)</span>
+      <span class="token comment"># Date column to add to each entry</span>
+      dates <span class="token operator">&lt;-</span> as.Date<span class="token punctuation">(</span>
+      sub<span class="token punctuation">(</span><span class="token string">".*([0-9.]{8}).*"</span><span
+        class="token punctuation">,</span> <span class="token string">"\\1"</span><span
+        class="token punctuation">,</span> basename<span class="token punctuation">(</span>prismBils<span
+        class="token punctuation">)</span><span class="token punctuation">)</span><span
+        class="token punctuation">,</span>
+      format <span class="token operator">=</span> <span class="token string">"%Y%m%d"</span><span
+        class="token punctuation">)</span>
 
-<span class="token comment"># Read in CT shapefile file and a single BIL. Reproject shapefile.</span>
-waCensus10 <span class="token operator">&lt;-</span> readOGR<span class="token punctuation">(</span>tract10_fn<span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
-
-
-<div class="code-toolbar"><pre class="language-bash" tabindex="0"><code class="language-bash"><span class="token comment">## Warning in OGRSpatialRef(dsn, layer, morphFromESRI = morphFromESRI, dumpSRS = dumpSRS, : Discarded datum</span>
-NAD83_High_Accuracy_Reference_Network
-<span class="token comment">## in Proj4 definition: +proj=lcc +lat_0=45.3333333333333 +lon_0=-120.5 +lat_1=45.8333333333333</span>
-+lat_2<span class="token operator">=</span><span class="token number">47.3333333333333</span> +x_0<span class="token operator">=</span><span class="token number">500000</span> +y_0<span class="token operator">=</span><span class="token number">0</span>
-<span class="token comment">## +ellps=GRS80 +units=us-ft +no_defs</span>
-
-<span class="token comment">## OGR data source with driver: ESRI Shapefile</span>
-<span class="token comment">## Source: "C:\YOURPATH\tract10.shp", layer: "tract10"</span>
-<span class="token comment">## with 1458 features</span>
-<span class="token comment">## It has 34 fields</span>
-<span class="token comment">## Integer64 fields read as strings: ALANDM AWATERM</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+      <span class="token comment"># Read in CT shapefile file and a single BIL. Reproject shapefile.</span>
+      waCensus10 <span class="token operator">&lt;-</span> readOGR<span
+        class="token punctuation">(</span>tract10_fn<span class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
 
-<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r">myBilFile <span class="token operator">&lt;-</span> list.files<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern <span class="token operator">=</span> <span class="token string">'.bil$'</span><span class="token punctuation">,</span> recursive <span class="token operator">=</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
-myRast <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>raster<span class="token punctuation">(</span>paste0<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> myBilFile<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
-waCensus10_transform <span class="token operator">&lt;-</span> spTransform<span class="token punctuation">(</span>waCensus10<span class="token punctuation">,</span> crs<span class="token punctuation">(</span>myRast<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<div class="code-toolbar">
+  <pre class="language-bash" tabindex="0"><code class="language-bash"><span class="token comment">## Warning in
+        OGRSpatialRef(dsn, layer, morphFromESRI = morphFromESRI, dumpSRS = dumpSRS, : Discarded datum</span>
+      NAD83_High_Accuracy_Reference_Network
+      <span class="token comment">## in Proj4 definition: +proj=lcc +lat_0=45.3333333333333 +lon_0=-120.5
+        +lat_1=45.8333333333333</span>
+      +lat_2<span class="token operator">=</span><span class="token number">47.3333333333333</span> +x_0<span
+        class="token operator">=</span><span class="token number">500000</span> +y_0<span
+        class="token operator">=</span><span class="token number">0</span>
+      <span class="token comment">## +ellps=GRS80 +units=us-ft +no_defs</span>
 
-<span class="token comment"># Function to make a single PRISM csv file</span>
-makePRISMcsv <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>prismBil<span class="token punctuation">,</span> outdir<span class="token punctuation">,</span> outfn<span class="token punctuation">,</span> shp<span class="token punctuation">,</span> varname<span class="token punctuation">,</span> funx<span class="token punctuation">,</span> date<span class="token punctuation">)</span><span class="token punctuation">{</span>
-  prismRast <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>raster<span class="token punctuation">(</span>prismBil<span class="token punctuation">)</span>
-  prismRast_crop <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>crop<span class="token punctuation">(</span>prismRast<span class="token punctuation">,</span> shp<span class="token punctuation">)</span>
-  extr <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>extract<span class="token punctuation">(</span>prismRast_crop<span class="token punctuation">,</span> shp<span class="token punctuation">,</span> fun <span class="token operator">=</span> funx<span class="token punctuation">)</span>
-  out <span class="token operator">&lt;-</span> data.frame<span class="token punctuation">(</span>shp<span class="token operator">@</span>data<span class="token operator">$</span>GEOID10<span class="token punctuation">,</span> date<span class="token punctuation">,</span> extr<span class="token punctuation">)</span>
-  colnames<span class="token punctuation">(</span>out<span class="token punctuation">)</span> <span class="token operator">&lt;-</span> c<span class="token punctuation">(</span><span class="token string">'GEOID10'</span><span class="token punctuation">,</span> <span class="token string">'DATE'</span><span class="token punctuation">,</span> varname<span class="token punctuation">)</span>
-  dir.create<span class="token punctuation">(</span>outdir<span class="token punctuation">)</span>
-  data.table<span class="token operator">::</span>fwrite<span class="token punctuation">(</span>out<span class="token punctuation">,</span> paste0<span class="token punctuation">(</span>outdir<span class="token punctuation">,</span> outfn<span class="token punctuation">,</span> <span class="token string">'.csv'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
-  return<span class="token punctuation">(</span>out<span class="token punctuation">)</span>
-<span class="token punctuation">}</span>
+      <span class="token comment">## OGR data source with driver: ESRI Shapefile</span>
+      <span class="token comment">## Source: "C:\YOURPATH\tract10.shp", layer: "tract10"</span>
+      <span class="token comment">## with 1458 features</span>
+      <span class="token comment">## It has 34 fields</span>
+      <span class="token comment">## Integer64 fields read as strings: ALANDM AWATERM</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
-<span class="token comment"># Run script in parallel, stop when finished.</span>
-addArgs <span class="token operator">&lt;-</span> list<span class="token punctuation">(</span>funx <span class="token operator">=</span> mean<span class="token punctuation">,</span> varname <span class="token operator">=</span> <span class="token string">'TMAX'</span><span class="token punctuation">,</span> shp <span class="token operator">=</span> waCensus10_transform<span class="token punctuation">,</span>
-  outdir <span class="token operator">=</span> csv_dir<span class="token punctuation">)</span>
-parallel<span class="token operator">::</span>clusterMap<span class="token punctuation">(</span>cl <span class="token operator">=</span> cl<span class="token punctuation">,</span>
-  fun <span class="token operator">=</span> makePRISMcsv<span class="token punctuation">,</span>
-  prismBil <span class="token operator">=</span> paste0<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> prismBils<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token operator">:</span>n_ras_to_csv<span class="token punctuation">]</span><span class="token punctuation">,</span>
-  outfn <span class="token operator">=</span> outunzip_fns<span class="token punctuation">[</span><span class="token number">1</span><span class="token operator">:</span>n_ras_to_csv<span class="token punctuation">]</span><span class="token punctuation">,</span>
-  date <span class="token operator">=</span> dates<span class="token punctuation">[</span><span class="token number">1</span><span class="token operator">:</span>n_ras_to_csv<span class="token punctuation">]</span><span class="token punctuation">,</span>
-  MoreArgs <span class="token operator">=</span> addArgs
-<span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
 
-<div class="code-toolbar"><pre class="language-bash" tabindex="0"><code class="language-bash"><span class="token comment">##$`C:/YOURFILEPATH/PRISM/TMAX/BIL/2011/PRISM_tmax_stable_4kmD2_20110121_bil/PRISM_tmax_stable_4kmD2_20110121_bil.bil`</span>
-<span class="token comment">## GEOID10 DATE TMAX</span>
-<span class="token comment">## 1 53001950100 2011-01-21 1.686708</span>
-<span class="token comment">## 2 53001950200 2011-01-21 2.760489</span>
-<span class="token comment">## 3 53001950300 2011-01-21 3.439578</span>
-<span class="token comment">## 4 53001950400 2011-01-21 3.581000</span>
-<span class="token comment">## 5 53001950500 2011-01-21 3.602333</span>
-<span class="token comment">## 6 53003960100 2011-01-21 2.815904</span>
-<span class="token comment">## 7 53003960200 2011-01-21 3.601333</span>
-<span class="token comment">## 8 53003960300 2011-01-21 3.194000</span>
-<span class="token comment">## 9 53003960400 2011-01-21 3.142500</span>
-<span class="token comment">## 10 53003960500 2011-01-21 3.194000</span>
-<span class="token comment">## 11 53003960600 2011-01-21 3.067500</span>
-<span class="token comment">## 12 53005010100 2011-01-21 7.329250</span>
-<span class="token comment">## 13 53005010201 2011-01-21 7.319000</span>
-<span class="token comment">## 14 53005010202 2011-01-21 7.364000</span>
-<span class="token comment">## 15 53005010300 2011-01-21 7.638000</span>
-<span class="token comment">## 16 53005010400 2011-01-21 7.554000</span>
-<span class="token comment">## 17 53005010500 2011-01-21 7.554000</span>
-<span class="token comment">## 18 53005010600 2011-01-21 7.803000</span>
-<span class="token comment">## 19 53005010701 2011-01-21 6.926500</span>
-<span class="token comment">## 20 53005010703 2011-01-21 7.241000</span>
-<span class="token comment">## 21 53005010705 2011-01-21 7.132750</span>
-<span class="token comment">## 22 53005010707 2011-01-21 7.023667</span>
-<span class="token comment">## 23 53005010708 2011-01-21 7.357500</span>
-<span class="token comment">## 24 53005010803 2011-01-21 7.128000</span>
-<span class="token comment">## 25 53005010805 2011-01-21 8.038000</span>
-<span class="token comment">## 26 53005010807 2011-01-21 6.401000</span>
-<span class="token comment">## 27 53005010809 2011-01-21 8.334500</span>
-<span class="token comment">## 28 53005010810 2011-01-21 8.539000</span>
+<div class="code-toolbar">
+  <pre class="language-r" tabindex="0"><code class="language-r">myBilFile <span class="token operator">&lt;-</span>
+      list.files<span class="token punctuation">(</span>download_dir<span class="token punctuation">,</span> pattern
+      <span class="token operator">=</span> <span class="token string">'.bil$'</span><span
+        class="token punctuation">,</span> recursive <span class="token operator">=</span> <span
+        class="token boolean">TRUE</span><span class="token punctuation">)</span><span
+        class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
+      myRast <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>raster<span
+        class="token punctuation">(</span>paste0<span class="token punctuation">(</span>download_dir<span
+        class="token punctuation">,</span> myBilFile<span class="token punctuation">)</span><span
+        class="token punctuation">[</span><span class="token punctuation">[</span><span
+        class="token number">1</span><span class="token punctuation">]</span><span
+        class="token punctuation">]</span><span class="token punctuation">)</span>
+      waCensus10_transform <span class="token operator">&lt;-</span> spTransform<span
+        class="token punctuation">(</span>waCensus10<span class="token punctuation">,</span> crs<span
+        class="token punctuation">(</span>myRast<span class="token punctuation">)</span><span
+        class="token punctuation">)</span>
 
-<span class="token punctuation">..</span><span class="token punctuation">..</span>
-Output manually truncated <span class="token keyword">for</span> this blog post.
-<span class="token punctuation">..</span><span class="token punctuation">..</span>
+      <span class="token comment"># Function to make a single PRISM csv file</span>
+      makePRISMcsv <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span
+        class="token punctuation">(</span>prismBil<span class="token punctuation">,</span> outdir<span
+        class="token punctuation">,</span> outfn<span class="token punctuation">,</span> shp<span
+        class="token punctuation">,</span> varname<span class="token punctuation">,</span> funx<span
+        class="token punctuation">,</span> date<span class="token punctuation">)</span><span
+        class="token punctuation">{</span>
+      prismRast <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>raster<span
+        class="token punctuation">(</span>prismBil<span class="token punctuation">)</span>
+      prismRast_crop <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>crop<span
+        class="token punctuation">(</span>prismRast<span class="token punctuation">,</span> shp<span
+        class="token punctuation">)</span>
+      extr <span class="token operator">&lt;-</span> raster<span class="token operator">::</span>extract<span
+        class="token punctuation">(</span>prismRast_crop<span class="token punctuation">,</span> shp<span
+        class="token punctuation">,</span> fun <span class="token operator">=</span> funx<span
+        class="token punctuation">)</span>
+      out <span class="token operator">&lt;-</span> data.frame<span class="token punctuation">(</span>shp<span
+        class="token operator">@</span>data<span class="token operator">$</span>GEOID10<span
+        class="token punctuation">,</span> date<span class="token punctuation">,</span> extr<span
+        class="token punctuation">)</span>
+      colnames<span class="token punctuation">(</span>out<span class="token punctuation">)</span> <span
+        class="token operator">&lt;-</span> c<span class="token punctuation">(</span><span
+        class="token string">'GEOID10'</span><span class="token punctuation">,</span> <span
+        class="token string">'DATE'</span><span class="token punctuation">,</span> varname<span
+        class="token punctuation">)</span>
+      dir.create<span class="token punctuation">(</span>outdir<span class="token punctuation">)</span>
+      data.table<span class="token operator">::</span>fwrite<span class="token punctuation">(</span>out<span
+        class="token punctuation">,</span> paste0<span class="token punctuation">(</span>outdir<span
+        class="token punctuation">,</span> outfn<span class="token punctuation">,</span> <span
+        class="token string">'.csv'</span><span class="token punctuation">)</span><span
+        class="token punctuation">)</span>
+      return<span class="token punctuation">(</span>out<span class="token punctuation">)</span>
+      <span class="token punctuation">}</span>
 
-<span class="token comment">## [ reached 'max' / getOption("max.print") -- omitted 1125 rows ]</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+      <span class="token comment"># Run script in parallel, stop when finished.</span>
+      addArgs <span class="token operator">&lt;-</span> list<span class="token punctuation">(</span>funx <span
+        class="token operator">=</span> mean<span class="token punctuation">,</span> varname <span
+        class="token operator">=</span> <span class="token string">'TMAX'</span><span class="token punctuation">,</span>
+      shp <span class="token operator">=</span> waCensus10_transform<span class="token punctuation">,</span>
+      outdir <span class="token operator">=</span> csv_dir<span class="token punctuation">)</span>
+      parallel<span class="token operator">::</span>clusterMap<span class="token punctuation">(</span>cl <span
+        class="token operator">=</span> cl<span class="token punctuation">,</span>
+      fun <span class="token operator">=</span> makePRISMcsv<span class="token punctuation">,</span>
+      prismBil <span class="token operator">=</span> paste0<span class="token punctuation">(</span>download_dir<span
+        class="token punctuation">,</span> prismBils<span class="token punctuation">)</span><span
+        class="token punctuation">[</span><span class="token number">1</span><span
+        class="token operator">:</span>n_ras_to_csv<span class="token punctuation">]</span><span
+        class="token punctuation">,</span>
+      outfn <span class="token operator">=</span> outunzip_fns<span class="token punctuation">[</span><span
+        class="token number">1</span><span class="token operator">:</span>n_ras_to_csv<span
+        class="token punctuation">]</span><span class="token punctuation">,</span>
+      date <span class="token operator">=</span> dates<span class="token punctuation">[</span><span
+        class="token number">1</span><span class="token operator">:</span>n_ras_to_csv<span
+        class="token punctuation">]</span><span class="token punctuation">,</span>
+      MoreArgs <span class="token operator">=</span> addArgs
+      <span class="token punctuation">)</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
+
+<div class="code-toolbar">
+  <pre class="language-bash" tabindex="0"><code class="language-bash"><span
+        class="token comment">##$`C:/YOURFILEPATH/PRISM/TMAX/BIL/2011/PRISM_tmax_stable_4kmD2_20110121_bil/PRISM_tmax_stable_4kmD2_20110121_bil.bil`</span>
+      <span class="token comment">## GEOID10 DATE TMAX</span>
+      <span class="token comment">## 1 53001950100 2011-01-21 1.686708</span>
+      <span class="token comment">## 2 53001950200 2011-01-21 2.760489</span>
+      <span class="token comment">## 3 53001950300 2011-01-21 3.439578</span>
+      <span class="token comment">## 4 53001950400 2011-01-21 3.581000</span>
+      <span class="token comment">## 5 53001950500 2011-01-21 3.602333</span>
+      <span class="token comment">## 6 53003960100 2011-01-21 2.815904</span>
+      <span class="token comment">## 7 53003960200 2011-01-21 3.601333</span>
+      <span class="token comment">## 8 53003960300 2011-01-21 3.194000</span>
+      <span class="token comment">## 9 53003960400 2011-01-21 3.142500</span>
+      <span class="token comment">## 10 53003960500 2011-01-21 3.194000</span>
+      <span class="token comment">## 11 53003960600 2011-01-21 3.067500</span>
+      <span class="token comment">## 12 53005010100 2011-01-21 7.329250</span>
+      <span class="token comment">## 13 53005010201 2011-01-21 7.319000</span>
+      <span class="token comment">## 14 53005010202 2011-01-21 7.364000</span>
+      <span class="token comment">## 15 53005010300 2011-01-21 7.638000</span>
+      <span class="token comment">## 16 53005010400 2011-01-21 7.554000</span>
+      <span class="token comment">## 17 53005010500 2011-01-21 7.554000</span>
+      <span class="token comment">## 18 53005010600 2011-01-21 7.803000</span>
+      <span class="token comment">## 19 53005010701 2011-01-21 6.926500</span>
+      <span class="token comment">## 20 53005010703 2011-01-21 7.241000</span>
+      <span class="token comment">## 21 53005010705 2011-01-21 7.132750</span>
+      <span class="token comment">## 22 53005010707 2011-01-21 7.023667</span>
+      <span class="token comment">## 23 53005010708 2011-01-21 7.357500</span>
+      <span class="token comment">## 24 53005010803 2011-01-21 7.128000</span>
+      <span class="token comment">## 25 53005010805 2011-01-21 8.038000</span>
+      <span class="token comment">## 26 53005010807 2011-01-21 6.401000</span>
+      <span class="token comment">## 27 53005010809 2011-01-21 8.334500</span>
+      <span class="token comment">## 28 53005010810 2011-01-21 8.539000</span>
+
+      <span class="token punctuation">..</span><span class="token punctuation">..</span>
+      Output manually truncated <span class="token keyword">for</span> this blog post.
+      <span class="token punctuation">..</span><span class="token punctuation">..</span>
+
+      <span class="token comment">## [ reached 'max' / getOption("max.print") -- omitted 1125 rows ]</span></code></pre>
+  <div class="toolbar">
+    <div class="toolbar-item"><button class="copy-to-clipboard-button" type="button"
+        data-copy-state="copy"><span>Copy</span></button></div>
+  </div>
+</div>
 
 
 <h2>Conclusion</h2>

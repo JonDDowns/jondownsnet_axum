@@ -21,7 +21,7 @@ VALUES (
 		'Palindromes in R',
 		:'p1', 
 		'Showcasing unit testing in R with a common coding interview question.', 
-		'../assets/images/palindromes.png',
+		'../assets/images/palindromes.webp',
 		'Some palindromes with a void background.'
 	),
 	(
@@ -37,7 +37,7 @@ VALUES (
 		'How to Download a Year of Temperature Data in 144 Lines of R Code',
 		:'p3',
 		'Demonstrates parallelism and raster manipulation in R.',
-		'../assets/images/prismTempsP3.png',
+		'../assets/images/prismTempsP3.webp',
 		'Heat map of Washington, USA'
 	),
 	(
@@ -53,6 +53,6 @@ VALUES (
 		'Need Performance? Use Rust!',
 		:'p5',
 		'Benchmarking cosine string distance in Rust and R.',
-		'../assets/images/rust-logo.png',
+		'../assets/images/rust-logo.webp',
 		'Rust logo. This does not reflect an endorsement of this website by the Rust Foundation.'
 	);
