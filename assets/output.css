@@ -662,3 +662,8 @@ ol {
   width: 75px;
   height: auto;
 }
+
+.post-body {
+  display: inline-block;
+  max-width: 100%;
+}
