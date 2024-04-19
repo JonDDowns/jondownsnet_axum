@@ -10,20 +10,20 @@
 <body>
 <nav class="bg-gray-800">
   <div class="max-w-7xl px-2 sm:px-6 lg:px-8">
-      <div class="flex items-center sm:items-stretch space-x-10">
+      <div class="flex-wrap items-center sm:items-stretch space-nav">
         <div class="flex flex-shrink-0 items-center justify-start">
           <a href="/">
-            <img class="h-16 w-auto" src="../assets/images/logo-black-rounded.png" alt="Jon Downs, MPH">
+            <img class="jd-logo" src="../assets/images/logo-black-rounded.png" alt="Jon Downs, MPH">
           </a>
         </div>
           <div class="flex space-x-5 items-center justify-between">
-            <a href="https://www.linkedin.com/in/jon-downs-epi/" class="rounded-md px-3 py-2" aria-current="page">
-              <img src="../assets/images/In-White-14.png" alt="LinkedIn" />
+            <a href="https://www.linkedin.com/in/jon-downs-epi/">
+              <img class="nav-logo" src="../assets/images/In-White-14.png" alt="LinkedIn"/>
             </a>
             <a href="https://github.com/JonDDowns" class="rounded-md px-3 py-2">
               <img src="../assets/images/github-mark-white.svg" alt="GitHub" class="h-8 w-auto">
             </a>
-            <a href="/assets/DownsJon_CV.pdf" class="text-white">Resume</a>
+            <a href="/assets/DownsJon_CVPublic.pdf" class="text-white">Resume</a>
             <a href="mailto:jon@jondowns.net" class="text-white">Email</a>
           </div>
         </div>
@@ -31,8 +31,8 @@
 </nav>
 
 <section class="mx-auto w-5/6">
-  <div class="flex-column">
-      <div class="py-5" style="margin-top: 5px; margin-bottom: 5px;">
+  <div style="display: inline-block">
+      <div class="page-header">
         <header>
           {% block header %}{% endblock %}
         </header>

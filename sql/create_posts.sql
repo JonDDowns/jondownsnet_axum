@@ -36,7 +36,7 @@ VALUES (
 		'2021-09-22',
 		'How to Download a Year of Temperature Data in 144 Lines of R Code',
 		:'p3',
-		'Demonstrates parallelism and rater manipulation in R.',
+		'Demonstrates parallelism and raster manipulation in R.',
 		'../assets/images/prismTempsP3.png',
 		'Heat map of Washington, USA'
 	),
@@ -52,7 +52,7 @@ VALUES (
 		'2024-04-12',
 		'Need Performance? Use Rust!',
 		:'p5',
-		'Implementing and benchmarking cosine string distance in Rust and R.',
+		'Benchmarking cosine string distance in Rust and R.',
 		'../assets/images/rust-logo.png',
 		'Rust logo. This does not reflect an endorsement of this website by the Rust Foundation.'
 	);

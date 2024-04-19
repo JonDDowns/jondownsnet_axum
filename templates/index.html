@@ -2,23 +2,34 @@
 
 {% block title %}Welcome -- jondowns.net{% endblock %}
 {% block header %}
+
 <h1>Welcome!</h1>
-<div class="flex justify-between items-center space-x-5">
-  <div>
-    <img style="min-width: 100%; max-width: 200px;" src="../assets/images/headshot2020_small.jpg"
+<div class="about-me-container">
+  <div class="profile-photo-container">
+    <img class="profile-photo" src="../assets/images/headshot2020_small.jpg"
       alt="Profile Picture" />
   </div>
-  <div>
+  <div class="about-me">
+
     <p>
       I am an epidemiologist with 10 years' experience in the public sector.
-      Early in my my career, I discovered a passion for computer programming as a tool to advance
-        public health.
+      Currently, I work in vital records for state government.
+      I have a passion for computer programming as a tool to advance public health.
       My specialties include task automation, regression modeling, machine learning, and performance optimization.
       I also co-facilitate a monthly meeting for other epidemiologists at my agency where
-        we discuss topics in coding.
-      I use this website to host some of my thoughts on coding as well as my current projects.
-      It was coded in Rust (Axum).
+      we discuss topics in coding.
+      I use this website to host some of my thoughts on coding and various personal projects.
+      Below, you will find some of my most recent blog posts.
+      Please <a href="mailto:jon@jondowns.net">contact me</a> if you have questions about my 
+        posts or wish to hear more about my current work.
     </p>
+
+    <p>
+      Outside of work, I enjoy spending time with my family, chess, strategy games, 
+        and getting outside with my dog (Goose). 
+      I am an avid learner who enjoys trying new things and learning skills to make the hard things in life a little easier.
+    </p>
+
   </div>
 </div>
 
@@ -32,7 +43,7 @@
   <div class="py-1">
     <div style="background-color: #f5f2f0;" class="rounded-lg py-0.5 px-2 flex items-center">
       <div class="pr-5">
-        <img src="{{ post.post_thumbnail }}" alt="{{ post.post_thumbnail_alt }}" style="max-width: 75px;"></img>
+        <img src="{{ post.post_thumbnail }}" alt="{{ post.post_thumbnail_alt }}" class="post-thumbnail"></img>
       </div>
       <div class="align-right inline-block">
         <div>
