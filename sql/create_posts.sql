@@ -29,7 +29,7 @@ VALUES (
 		'How long will the series last?',
 		:'p2',
 		'Exploring probability with an Rshiny app.',
-		'../assets/images/thomas-park-Nl942-bo_4o-unsplash.jpg',
+		'../assets/images/thomas-park-baseball-unsplash.webp',
 		'Baseball. Courtesy Thomas Park via Unsplash.'
 	),
 	(
@@ -45,7 +45,7 @@ VALUES (
 		'An R User''s Guide to Python',
 		:'p4',
 		'Compares and contrasts some of the most common data manipulation operations in both R and Python.',
-		'../assets/images/dsPrimaDonna.png',
+		'../assets/images/dsPrimaDonna.webp',
 		'Image from The Queen''s Gambit, captioned with a meme. Very funny, trust me.'
 	),
 	(
