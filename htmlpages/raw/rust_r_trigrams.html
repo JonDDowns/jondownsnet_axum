@@ -227,40 +227,42 @@ print<span class="token punctuation">(</span>paste<span class="token punctuation
 	The choice of hash map did not significantly impact results, at least on this scale.
 </p>
 
-<table class="table-auto">
-	<tbody><tr>
-		<td>Label</td>
-		<td>Time</td>
-		<td>Comparisons/sec.</td>
-		<td>Ratio</td>
-	</tr>
-	<tr>
-		<td>R baseline</td>
-		<td>41.01</td>
-		<td>1,219,003.7</td>
-		<td>Ref.</td>
-	</tr>
-	<tr>
-		<td>Rust (v1)</td>
-		<td>1.02</td>
-		<td>49,104,248.9</td>
-		<td>40.3</td>
-	</tr>
-	<tr>
-		<td>Rust (v2)</td>
-		<td>0.63</td>
-		<td>79,112,271.5</td>
-		<td>64.8</td>
-	</tr>
-	<tr>
-		<td>Rust (final)</td>
-		<td>0.63</td>
-		<td>79,992,000.0</td>
-		<td>65.6</td>
-	</tr>
-</tbody></table>
+<table class="blogTable">
+    <tr class="blogTable">
+	<th>Label</th>
+	<th>Time</th>
+	<th>Comparisons</th>
+	<th>Ratio</th>
+    </tr>
+    <tr class="blogTable">
+	<td>R baseline</td>
+	<td>41.01</td>
+	<td>1,219,003.7</td>
+	<td>Ref.</td>
+    </tr>
+    <tr class="blogTable">
+	<td>Rust (v1)</td>
+	<td>1.02</td>
+	<td>49,104,248.9</td>
+	<td>40.3</td>
+    </tr>
+    <tr class="blogTable">
+	<td>Rust (v2)</td>
+	<td>0.63</td>
+	<td>79,112,271.5</td>
+	<td>64.8</td>
+    </tr>
+    <tr class="blogTable">
+	<td>Rust (final)</td>
+	<td>0.63</td>
+	<td>79,992,000.0</td>
+	<td>65.6</td>
+    </tr>
+</table>
 
-<img src="../assets/images/cos_tri_benchmarks.svg"></img>
+<br>
+
+<img style="max-width: 550px;" src="../assets/images/cos_tri_benchmarks.svg"></img>
 
 <h2>Conclusion</h2>
 
