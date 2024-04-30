@@ -1,0 +1,185 @@
+<h2>Introduction</h2>
+
+<p>
+	Recently, a colleague reached out for help with some code that was taking days to run.
+	They had considered whether the piece of problematic code should simply be dropped from the program.
+	First, we explored Rust as an option, and I shared <a href="www.jondowns.net/posts/5">some of my thoughts here</a>.
+	However, when reviewing the R code, we discovered a few optimizations that made the code more than 1,000x faster.
+	There was one piece of code that was particularly problematic.
+	So, I wanted to write this post to describe the problem as well as my suggestion for fixing it.
+</p>
+
+<h2>The Code</h2>
+
+<p>
+	In the code sample below, we first create a data.table with two columns of strings.
+	Most of the strings are just single letters of the English alphabet, but some words are mixed in.
+	After setting up the data, we try to define a variable res.
+	This variable calculates the approximate string distance between the left and right vectors of each row.
+	If one of the words only has one letter, then the first character in both strings are compared for equality.
+	This control logic is implemented in a 
+	<a href="https://www.rdocumentation.org/packages/data.table/versions/1.15.4/topics/fcase">fcase</a> 
+	statement.
+	However, the code throws an error:
+</p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r">library<span class="token punctuation">(</span>data.table<span class="token punctuation">)</span>
+library<span class="token punctuation">(</span>stringdist<span class="token punctuation">)</span>
+
+<span class="token comment"># Sample data</span>
+nrec <span class="token operator">&lt;-</span> <span class="token number">1000</span>
+options <span class="token operator">&lt;-</span> c<span class="token punctuation">(</span><span class="token string">"CAT"</span><span class="token punctuation">,</span> <span class="token string">"HAT"</span><span class="token punctuation">,</span> <span class="token string">"THAT"</span><span class="token punctuation">,</span> <span class="token string">"SPAT"</span><span class="token punctuation">,</span> <span class="token string">"SCENTED"</span><span class="token punctuation">,</span> <span class="token string">"APRON"</span><span class="token punctuation">,</span> LETTERS<span class="token punctuation">)</span>
+dt <span class="token operator">&lt;-</span> data.table<span class="token punctuation">(</span>ID <span class="token operator">=</span> <span class="token number">1</span><span class="token operator">:</span>nrec<span class="token punctuation">,</span> left <span class="token operator">=</span> sample<span class="token punctuation">(</span>options<span class="token punctuation">,</span> nrec<span class="token punctuation">,</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span><span class="token punctuation">,</span> right <span class="token operator">=</span> sample<span class="token punctuation">(</span>options<span class="token punctuation">,</span> nrec<span class="token punctuation">,</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># String distance: check for equality if one string is only one character wide</span>
+fcase_by <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>left<span class="token punctuation">,</span> right<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  fcase<span class="token punctuation">(</span>
+    nchar<span class="token punctuation">(</span>left<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">1</span> <span class="token operator">|</span> nchar<span class="token punctuation">(</span>right<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">1</span><span class="token punctuation">,</span>
+    as.numeric<span class="token punctuation">(</span>substr<span class="token punctuation">(</span>left<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">!=</span> substr<span class="token punctuation">(</span>right<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    default <span class="token operator">=</span> stringdist<span class="token punctuation">(</span>left<span class="token punctuation">,</span> right<span class="token punctuation">)</span>
+  <span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+dt<span class="token punctuation">[</span><span class="token punctuation">,</span> res <span class="token operator">:</span><span class="token operator">=</span> fcase_by<span class="token punctuation">(</span>left<span class="token punctuation">,</span> right<span class="token punctuation">)</span><span class="token punctuation">]</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<div class="code-toolbar"><pre class="language-bash" tabindex="0"><code class="language-bash">Error <span class="token keyword">in</span> fcase<span class="token punctuation">(</span>nchar<span class="token punctuation">(</span>left<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">1</span> <span class="token operator">|</span> nchar<span class="token punctuation">(</span>right<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">1</span>, as.numeric<span class="token punctuation">(</span>substr<span class="token punctuation">(</span>left,  <span class="token builtin class-name">:</span> 
+  Length of <span class="token string">'default'</span> must be <span class="token number">1</span>.
+Calls: <span class="token punctuation">[</span> -<span class="token operator">&gt;</span> <span class="token punctuation">[</span>.data.table -<span class="token operator">&gt;</span> <span class="token builtin class-name">eval</span> -<span class="token operator">&gt;</span> <span class="token builtin class-name">eval</span> -<span class="token operator">&gt;</span> fcase_by -<span class="token operator">&gt;</span> fcase
+Execution halted</code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<h2>The Problem</h2>
+
+<p>
+	The problem is with the way the default argument of fcase is being used.
+	It is designed for hard-coded patterns, like 0 or 1. 
+	Instead, it is being used as control flow for multiple functions.
+	The code I reviewed did not look like this, but I suspect it did at one point.
+	Why? Because the actual code finds a workaround:
+</p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r">dt<span class="token punctuation">[</span><span class="token punctuation">,</span> res <span class="token operator">:</span><span class="token operator">=</span> fcase_by<span class="token punctuation">(</span>left<span class="token punctuation">,</span> right<span class="token punctuation">)</span><span class="token punctuation">,</span> by <span class="token operator">=</span> ID<span class="token punctuation">]</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<p>
+	While this fixed the error, it ruined the performance.
+	The by operator is typically reserved for groupwise operations.
+	Here, it is used on a column that is unique for each row of data.
+	Thus, each row is evaluated indepdendently, which forces the entire function to be non-vectorised.
+	Most R users have been told to avoid for loops because they are slow.
+	Let's see how well common wisdom holds up: 
+</p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r"><span class="token comment"># Same logic, but in for loop</span>
+sdist_loop <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>left<span class="token punctuation">,</span> right<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  n <span class="token operator">&lt;-</span> length<span class="token punctuation">(</span>left<span class="token punctuation">)</span>
+  out <span class="token operator">&lt;-</span> rep<span class="token punctuation">(</span><span class="token keyword">NA</span><span class="token punctuation">,</span> length<span class="token punctuation">(</span>left<span class="token punctuation">)</span><span class="token punctuation">)</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token keyword">in</span> n<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>nchar<span class="token punctuation">(</span>left<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">1</span> <span class="token operator">|</span> nchar<span class="token punctuation">(</span>right<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      out<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">&lt;-</span> as.numeric<span class="token punctuation">(</span>substr<span class="token punctuation">(</span>right<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">!=</span> substr<span class="token punctuation">(</span>left<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+      out<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">&lt;-</span> stringdist<span class="token punctuation">(</span>left<span class="token punctuation">,</span> right<span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+  out
+<span class="token punctuation">}</span>
+
+bench_by_nrec <span class="token operator">&lt;-</span> <span class="token keyword">function</span><span class="token punctuation">(</span>nrec<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  options <span class="token operator">&lt;-</span> c<span class="token punctuation">(</span><span class="token string">"CAT"</span><span class="token punctuation">,</span> <span class="token string">"HAT"</span><span class="token punctuation">,</span> <span class="token string">"THAT"</span><span class="token punctuation">,</span> <span class="token string">"SPAT"</span><span class="token punctuation">,</span> <span class="token string">"SCENTED"</span><span class="token punctuation">,</span> <span class="token string">"APRON"</span><span class="token punctuation">,</span> LETTERS<span class="token punctuation">)</span>
+  dt <span class="token operator">&lt;-</span> data.table<span class="token punctuation">(</span>ID <span class="token operator">=</span> <span class="token number">1</span><span class="token operator">:</span>nrec<span class="token punctuation">,</span> left <span class="token operator">=</span> sample<span class="token punctuation">(</span>options<span class="token punctuation">,</span> nrec<span class="token punctuation">,</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span><span class="token punctuation">,</span> right <span class="token operator">=</span> sample<span class="token punctuation">(</span>options<span class="token punctuation">,</span> nrec<span class="token punctuation">,</span> <span class="token boolean">TRUE</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+  bench <span class="token operator">&lt;-</span> data.table<span class="token punctuation">(</span>microbenchmark<span class="token punctuation">(</span>
+                          <span class="token string">"By + fcase"</span> <span class="token operator">=</span> dt<span class="token punctuation">[</span><span class="token punctuation">,</span> res <span class="token operator">:</span><span class="token operator">=</span> fcase_by<span class="token punctuation">(</span>left<span class="token punctuation">,</span> right<span class="token punctuation">)</span><span class="token punctuation">,</span> by <span class="token operator">=</span> ID<span class="token punctuation">]</span><span class="token punctuation">,</span>
+                          <span class="token string">"For loop"</span> <span class="token operator">=</span> dt<span class="token punctuation">[</span><span class="token punctuation">,</span> res2 <span class="token operator">:</span><span class="token operator">=</span> sdist_loop<span class="token punctuation">(</span>left<span class="token punctuation">,</span> right<span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+                          times <span class="token operator">=</span> <span class="token number">10</span>
+  <span class="token punctuation">)</span><span class="token punctuation">)</span>
+  bench<span class="token punctuation">[</span><span class="token punctuation">,</span> nrec <span class="token operator">:</span><span class="token operator">=</span> nrec<span class="token punctuation">]</span>
+  bench<span class="token punctuation">[</span><span class="token punctuation">,</span> time <span class="token operator">:</span><span class="token operator">=</span> time <span class="token operator">/</span> <span class="token number">1e9</span><span class="token punctuation">]</span>
+  bench<span class="token punctuation">[</span><span class="token punctuation">,</span> list<span class="token punctuation">(</span>expr<span class="token punctuation">,</span> nrec<span class="token punctuation">,</span> time<span class="token punctuation">)</span><span class="token punctuation">]</span>
+<span class="token punctuation">}</span>
+
+out <span class="token operator">&lt;-</span> do.call<span class="token punctuation">(</span>rbind<span class="token punctuation">,</span> lapply<span class="token punctuation">(</span>seq<span class="token punctuation">(</span><span class="token number">10000</span><span class="token punctuation">,</span> <span class="token number">50000</span><span class="token punctuation">,</span> by <span class="token operator">=</span> <span class="token number">10000</span><span class="token punctuation">)</span><span class="token punctuation">,</span> bench_by_nrec<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+p <span class="token operator">&lt;-</span> ggplot<span class="token punctuation">(</span>out<span class="token punctuation">,</span> aes<span class="token punctuation">(</span>x <span class="token operator">=</span> nrec<span class="token punctuation">,</span> y <span class="token operator">=</span> time<span class="token punctuation">,</span> group <span class="token operator">=</span> nrec<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+  geom_line<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+  geom_smooth<span class="token punctuation">(</span>method <span class="token operator">=</span> <span class="token string">"lm"</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+  theme_minimal<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> 
+  ylab<span class="token punctuation">(</span><span class="token string">"Time (s)"</span><span class="token punctuation">)</span> <span class="token operator">+</span>
+  xlab<span class="token punctuation">(</span><span class="token string">"Number of rows"</span><span class="token punctuation">)</span>
+
+svglite<span class="token operator">::</span>svglite<span class="token punctuation">(</span><span class="token string">"dt_strdist_bench.svg"</span><span class="token punctuation">,</span> width <span class="token operator">=</span> <span class="token number">6.0</span><span class="token punctuation">,</span> height <span class="token operator">=</span> <span class="token number">4</span><span class="token punctuation">)</span>
+plot<span class="token punctuation">(</span>p<span class="token punctuation">)</span>
+dev.off<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<img src="../assets/images/dt_strdist_bench.svg" />
+<p>
+	Ouch. 
+	The for loop starts off 200x more performant, and by 50,000 records the difference approaches 1,000x.
+	As it turns out, the for loop is the most performant option I have tried to date.
+	I had originally assumed a vectorized ifelse would have been the fastest.
+	I still have some digging to do to understand why the for loop did so well.
+	My current thinking is that multithreading is attempted in both data.table and stringdist, which becomes counterproductive.
+	But, that is a topic for another day.
+	For now, let's focus on why the original solution was so slow.
+</p>
+
+<p>
+	Most R functions are little more than bindings for functions in low-level languages, typically C and C++.
+	One of the reasons these languages are faster is because they manage memory efficiently.
+	To automate memory management for R users, R objects include some extra overhead.
+	Some of this overhead is the same for all R objects, no matter their size.
+	Furthermore, R activates additional memory optimizations once an R object grows large enough.
+	The below code example demonstrates this:
+</p>
+
+<div class="code-toolbar"><pre class="language-r" tabindex="0"><code class="language-r">objs <span class="token operator">&lt;-</span> list<span class="token punctuation">(</span><span class="token string">"single int"</span> <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">"two ints"</span> <span class="token operator">=</span> <span class="token number">1</span><span class="token operator">:</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token string">"first 10,000 ints"</span> <span class="token operator">=</span> <span class="token number">1</span><span class="token operator">:</span><span class="token number">10000</span><span class="token punctuation">)</span>
+lapply<span class="token punctuation">(</span>objs<span class="token punctuation">,</span> <span class="token keyword">function</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span> c<span class="token punctuation">(</span><span class="token string">"Total size"</span> <span class="token operator">=</span> object.size<span class="token punctuation">(</span>x<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"Size per element"</span> <span class="token operator">=</span> object.size<span class="token punctuation">(</span>x<span class="token punctuation">)</span> <span class="token operator">/</span> length<span class="token punctuation">(</span>x<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<div class="code-toolbar"><pre class="language-bash" tabindex="0"><code class="language-bash">$<span class="token variable"><span class="token variable">`</span>single int<span class="token variable">`</span></span>
+      Total size Size per element 
+              <span class="token number">56</span>               <span class="token number">56</span> 
+
+$<span class="token variable"><span class="token variable">`</span>two ints<span class="token variable">`</span></span>
+      Total size Size per element 
+              <span class="token number">56</span>               <span class="token number">28</span> 
+
+$<span class="token variable"><span class="token variable">`</span>first <span class="token number">10,000</span> ints<span class="token variable">`</span></span>
+      Total size Size per element 
+      <span class="token number">40048.0000</span>           <span class="token number">4.0048</span> 
+</code></pre><div class="toolbar"><div class="toolbar-item"><button class="copy-to-clipboard-button" type="button" data-copy-state="copy"><span>Copy</span></button></div></div></div>
+
+<p>
+	A list of one element requires just as much memory as a list of two element (56 bytes).
+	Even better, a list of 10,000 elements is 7 times more memory efficient than a list of two (4 bytes per element).
+	In the rowwise by function, we make one object for each row, then combine them into a single list.
+	This follows logically from the functionality of the by operator.
+	If you are not convinced, modify the function to print something each time it is called and count how many lines are printed out.
+	In the for loop, we create one object per <em>thread</em> and then fill in the values. 
+	Data.table uses <a href="https://www.rdocumentation.org/packages/data.table/versions/1.15.4/topics/setDTthreads">multithreading in certain conditions</a>, so the function would be called once on each worker.
+	You might think the memory efficiency does not matter if the end object is the same size.
+	But memory allocation, memory deallocation, and combining objects each <a href="https://johnnysswlab.com/the-price-of-dynamic-memory-allocation/">incur their own costs</a>.
+	There is also the overhead of multithreading itself: multithreading is only faster if the cost of sending data from the main thread to a worker thread and back again is relatively small.
+	In this case, memory is passed back and forth very inefficiently, so we would have been better off without multithreading.
+</p>
+
+<h2>Conclusion</h2>
+
+<p>
+	Languages like R and Python have fluorished precisely because trading performance for ease of use is
+	often worth it.
+	However, when performance matters, the hidden optimizations become more annoying and less helpful.
+	My advice? Assume nothing and benchmark everything.
+	The <a href="https://www.rdocumentation.org/packages/microbenchmark/versions/1.4.10/topics/microbenchmark"> microbenchmark package in R</a> is great for testing small units of code.
+	Hadley's Advance R book has a <a href="https://adv-r.hadley.nz/perf-improve.html">section on performance</a> that is also worth browsing.
+	In this case, we found enough performance that we might not need a low level language after all.
+	It is also important to understand the tools you are using.
+	I have never regretted reading documentation for anything I use a lot: code editors, R packages, anything.
+	Finally, definitely consider adding a low-level language to your toolkit.
+	Not only can you integrate C, C++, and Rust code into R and Python, but they will teach you concepts about coding you would not otherwise learn.
+	I probably would have made a similar mistake had I not began learning Rust.
+</p>
+
+<p>
+	What are some major R performance tips that you have discovered?
+	Can you write a faster version of the functions shown here?
+	Or, do you know why the for loop is doing so much better than an ifelse block?
+	If so, I'd love to hear from you!
+</p>
