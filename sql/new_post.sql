@@ -1,4 +1,4 @@
-\set post `cat ~/projects/jondownsnet_axum/rust/htmlpages/raw/this_one_mistake.html`
+\set post `cat ./htmlpages/raw/this_one_mistake.html`
 INSERT INTO posts (post_date, post_title, post_body, post_summary, post_thumbnail, post_thumbnail_alt)
 VALUES (
 	'2024-04-26',
